@@ -1,0 +1,23 @@
+[
+  {
+    "id": "a83ec1d0-4e27-4063-b564-bc0cb30541af",
+    "creado_en": "2026-09-22T12:02:28.914Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "d0c0b198f3752be3c59b506206e2dce8dfa44fb5c015aa1a75c344320de4bf15",
+    "expira_en": "2026-09-22T12:22:28.914Z",
+    "usado_en": "2026-09-22T12:06:52.761Z",
+    "usado_motivo": "reemplazado",
+    "actualizado_en": "2026-09-22T12:06:52.761Z"
+  },
+  {
+    "id": "6f376188-7682-4685-b479-dd583d61d55d",
+    "creado_en": "2026-09-22T12:06:52.765Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "6a8f41efc849036a333125499f2c205e34e657ede3a515ca9f3f28e39ce3fa4b",
+    "expira_en": "2026-09-22T12:26:52.765Z",
+    "usado_en": null,
+    "usado_motivo": null
+  }
+]

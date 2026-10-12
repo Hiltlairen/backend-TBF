@@ -1,0 +1,82 @@
+[
+  {
+    "id": "8ce85104-16c6-4013-862b-e5e63c38629e",
+    "creado_en": "2026-09-22T12:27:50.279Z",
+    "codigo": "70394",
+    "modo": "simple",
+    "titulo": "Word maze",
+    "curso": "2do Libro Mañana",
+    "limite_estudiantes": 5,
+    "estudiantes": [
+      "Teodoro"
+    ],
+    "actividad_id": "6bce41bc-dca8-4c0a-a6f3-8b9bc3586083",
+    "ruta_id": null,
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "docente_nombre": "William",
+    "activa": false,
+    "expira_en": "2026-09-22T18:27:50.279Z",
+    "actualizado_en": "2026-09-22T12:30:26.188Z"
+  },
+  {
+    "id": "80a32112-4efb-408f-a591-6d81ee6730d7",
+    "creado_en": "2026-09-22T12:59:57.788Z",
+    "codigo": "27123",
+    "modo": "juego",
+    "titulo": "Aventura · L6 · A2",
+    "curso": "2do Libro Mañana",
+    "limite_estudiantes": 5,
+    "estudiantes": [
+      "Teodoro"
+    ],
+    "actividad_id": null,
+    "ruta_id": "349c9248-33bb-4845-b4f5-3d7cec66128c",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "docente_nombre": "William",
+    "activa": false,
+    "expira_en": "2026-09-22T18:59:57.788Z",
+    "actualizado_en": "2026-09-22T13:06:08.386Z"
+  },
+  {
+    "id": "84a3a226-9fe4-4690-bb8a-cfa3da3d9c57",
+    "creado_en": "2026-09-27T23:46:16.210Z",
+    "codigo": "95578",
+    "modo": "simple",
+    "titulo": "Word maze",
+    "curso": "2do Libro Mañana",
+    "limite_estudiantes": 5,
+    "estudiantes": [
+      "Juana"
+    ],
+    "actividad_id": "70d54c22-99dd-44f1-aec7-600f02881822",
+    "ruta_id": null,
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "docente_nombre": "William",
+    "activa": true,
+    "expira_en": "2026-09-28T05:46:16.210Z",
+    "actualizado_en": "2026-09-28T00:07:40.199Z"
+  },
+  {
+    "id": "33e76c2a-2784-4697-ac60-a636d3e5f1eb",
+    "creado_en": "2026-09-28T17:54:46.376Z",
+    "codigo": "39719",
+    "modo": "simple",
+    "titulo": "Choose the right response",
+    "curso": "2do Libro Mañana",
+    "limite_estudiantes": 5,
+    "estudiantes": [
+      "Susana"
+    ],
+    "actividad_id": "18dba6eb-65cd-4dc1-a1d7-cd33eab20da7",
+    "ruta_id": null,
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "docente_nombre": "William",
+    "activa": true,
+    "expira_en": "2026-09-28T23:54:46.376Z",
+    "actualizado_en": "2026-09-28T17:56:34.939Z"
+  }
+]

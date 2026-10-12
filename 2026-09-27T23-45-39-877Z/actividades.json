@@ -1,0 +1,96 @@
+[
+  {
+    "id": "6bce41bc-dca8-4c0a-a6f3-8b9bc3586083",
+    "creado_en": "2026-09-22T12:27:24.480Z",
+    "codigo": "15-laberinto-palabras",
+    "nivel": "A2",
+    "modo": "simple",
+    "curso": "2do Libro Mañana",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "cantidad": 4,
+    "lecciones_ids": [
+      6
+    ],
+    "lecciones_titulos": [
+      {
+        "id": 6,
+        "numero": 6,
+        "titulo": "Let's talk about your abilities"
+      }
+    ],
+    "leccion_titulo": "L6 · Let's talk about your abilities",
+    "titulo": "Word maze",
+    "contenido": {
+      "actividad": {
+        "id": "15-laberinto-palabras",
+        "titulo": "Word maze",
+        "instrucciones": "Complete the activity.",
+        "nivel": "A2",
+        "leccion": "",
+        "tiempo_limite": 120,
+        "puntuacion_maxima": 100,
+        "penalizacion_por_error": 10,
+        "escenario": "torre",
+        "interaccion": "ninguna",
+        "presencia": "ninguna"
+      },
+      "vidas_iniciales": 3,
+      "tiempo_por_nivel": 40,
+      "niveles": [
+        {
+          "id": "N1",
+          "oracion": "I go to school every day.",
+          "traduccion": "Voy a la escuela todos los días.",
+          "palabras_en_orden": [
+            "I",
+            "go",
+            "to",
+            "school",
+            "every",
+            "day"
+          ],
+          "distractores": [
+            "run",
+            "house"
+          ]
+        },
+        {
+          "id": "N2",
+          "oracion": "She reads a book at night.",
+          "traduccion": "Ella lee un libro por la noche.",
+          "palabras_en_orden": [
+            "She",
+            "reads",
+            "a",
+            "book",
+            "at",
+            "night"
+          ],
+          "distractores": [
+            "run",
+            "house"
+          ]
+        },
+        {
+          "id": "N3",
+          "oracion": "We eat breakfast together.",
+          "traduccion": "Desayunamos juntos.",
+          "palabras_en_orden": [
+            "We",
+            "eat",
+            "breakfast",
+            "together"
+          ],
+          "distractores": [
+            "run",
+            "house"
+          ]
+        }
+      ]
+    },
+    "autor": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "autor_nombre": "William",
+    "autor_avatar": null,
+    "estado": "aprobada"
+  }
+]

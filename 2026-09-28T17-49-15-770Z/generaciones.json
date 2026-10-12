@@ -1,0 +1,50 @@
+[
+  {
+    "id": "441e7e51-1d25-4c65-a7db-8063b271b6c7",
+    "creado_en": "2026-09-22T12:27:24.483Z",
+    "tipo": "actividad",
+    "referencia_id": "6bce41bc-dca8-4c0a-a6f3-8b9bc3586083",
+    "autor": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "codigo": "15-laberinto-palabras",
+    "nivel": "A2",
+    "curso": "2do Libro Mañana",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "llamadas_gemini": 0,
+    "tokens_entrada": 0,
+    "tokens_salida": 0,
+    "desde_cache": false,
+    "modelo": "gemini-flash-latest"
+  },
+  {
+    "id": "3a4c7050-bd51-44c9-bad9-2b0e869e7ff3",
+    "creado_en": "2026-09-22T12:59:51.961Z",
+    "tipo": "ruta",
+    "referencia_id": "349c9248-33bb-4845-b4f5-3d7cec66128c",
+    "autor": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "codigo": "13-pedido+15-laberinto-palabras+10-canciones+03-conversation-selection+08-inflexion+05-redaccion",
+    "nivel": "A2",
+    "curso": "2do Libro Mañana",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "llamadas_gemini": 0,
+    "tokens_entrada": 0,
+    "tokens_salida": 0,
+    "desde_cache": false,
+    "modelo": "gemini-flash-latest"
+  },
+  {
+    "id": "4cf41371-4da6-4ead-a5ce-2cac253771c4",
+    "creado_en": "2026-09-27T23:45:54.433Z",
+    "tipo": "actividad",
+    "referencia_id": "70d54c22-99dd-44f1-aec7-600f02881822",
+    "autor": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "codigo": "15-laberinto-palabras",
+    "nivel": "A2",
+    "curso": "2do Libro Mañana",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "llamadas_gemini": 0,
+    "tokens_entrada": 0,
+    "tokens_salida": 0,
+    "desde_cache": false,
+    "modelo": "gemini-flash-latest"
+  }
+]

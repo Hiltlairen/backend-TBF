@@ -1,0 +1,56 @@
+[
+  {
+    "id": "a83ec1d0-4e27-4063-b564-bc0cb30541af",
+    "creado_en": "2026-09-22T12:02:28.914Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "d0c0b198f3752be3c59b506206e2dce8dfa44fb5c015aa1a75c344320de4bf15",
+    "expira_en": "2026-09-22T12:22:28.914Z",
+    "usado_en": "2026-09-22T12:06:52.761Z",
+    "usado_motivo": "reemplazado",
+    "actualizado_en": "2026-09-22T12:06:52.761Z"
+  },
+  {
+    "id": "6f376188-7682-4685-b479-dd583d61d55d",
+    "creado_en": "2026-09-22T12:06:52.765Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "6a8f41efc849036a333125499f2c205e34e657ede3a515ca9f3f28e39ce3fa4b",
+    "expira_en": "2026-09-22T12:26:52.765Z",
+    "usado_en": "2026-09-22T12:07:33.880Z",
+    "usado_motivo": "reemplazado",
+    "actualizado_en": "2026-09-22T12:07:33.880Z"
+  },
+  {
+    "id": "f62f28d4-9800-4693-bab6-43f6b1b2e47d",
+    "creado_en": "2026-09-22T12:07:33.882Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "d5ad7d24c4ae2344d03e504986e6202020483d45da8130f881aced6137926fff",
+    "expira_en": "2026-09-22T12:27:33.882Z",
+    "usado_en": "2026-09-22T12:17:46.125Z",
+    "usado_motivo": "reemplazado",
+    "actualizado_en": "2026-09-22T12:17:46.125Z"
+  },
+  {
+    "id": "130c5ee3-f98c-4b20-9b6d-d0c39521db4b",
+    "creado_en": "2026-09-22T12:17:46.129Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "16d55a9b3fb879e963bc7728b17b000dce8df4f5c26776972a9d3f4487ecc06d",
+    "expira_en": "2026-09-22T12:37:46.129Z",
+    "usado_en": "2026-09-22T12:20:45.934Z",
+    "usado_motivo": "reemplazado",
+    "actualizado_en": "2026-09-22T12:20:45.934Z"
+  },
+  {
+    "id": "57a14828-4b9d-4404-b796-43d16ff4e910",
+    "creado_en": "2026-09-22T12:20:45.939Z",
+    "usuario_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "tipo": "verificacion_cuenta",
+    "token_hash": "29f3379db5c4d4065e769b95f96309ba058d246902a881f5e764e44da06776dc",
+    "expira_en": "2026-09-22T12:40:45.938Z",
+    "usado_en": null,
+    "usado_motivo": null
+  }
+]

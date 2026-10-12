@@ -1,0 +1,67 @@
+[
+  {
+    "id": "bad4dc4d-d204-44f4-9fc1-1aa44c54bad5",
+    "creado_en": "2026-09-22T12:00:12.989Z",
+    "email": "admin@englishlessons.edu",
+    "nombre": "Dirección Académica",
+    "rol": "admin",
+    "password_hash": "$2a$10$HsFnbFx10f0J4jFBJpFOluPbo2XO06TQrnGV6VuAGyhUWXiH83UrK",
+    "activo": true,
+    "email_verificado": true,
+    "ultimo_acceso": "2026-09-22T12:00:50.618Z",
+    "actualizado_en": "2026-09-22T12:00:52.080Z",
+    "aviso_privacidad_version": 1,
+    "aviso_privacidad_en": "2026-09-22T12:00:52.080Z"
+  },
+  {
+    "id": "9bdff3b3-efa7-4062-bb13-0e5576659158",
+    "creado_en": "2026-09-22T12:00:13.156Z",
+    "email": "curaduria@englishlessons.edu",
+    "nombre": "Mesa de Curaduría",
+    "rol": "curador",
+    "password_hash": "$2a$10$XYlAXnOpMrwMcLbF57S2SeAv8DiSCZIVw1YI62519aT9ByDhUnRN6",
+    "activo": true,
+    "email_verificado": true
+  },
+  {
+    "id": "fc3bb663-bef2-4d1e-b373-573209d0303e",
+    "creado_en": "2026-09-22T12:00:13.327Z",
+    "email": "revision2@englishlessons.edu",
+    "nombre": "Ana Quispe (revisora)",
+    "rol": "curador",
+    "password_hash": "$2a$10$TVy6sUuxCYYNmLKreHzReuo6PNtj7xt3DZZ0U0id45C8rLg6boFcy",
+    "activo": true,
+    "email_verificado": true
+  },
+  {
+    "id": "e5680168-7c5f-4f53-944f-eed4af553e11",
+    "creado_en": "2026-09-22T12:00:13.495Z",
+    "email": "docente@englishlessons.edu",
+    "nombre": "Prof. Laura Mamani",
+    "rol": "docente",
+    "password_hash": "$2a$10$e0DGX8hvvNB6WFcxZxUK4OzAHn01d7GGFLwNpSyG8Xl.A/38ydp6W",
+    "activo": true,
+    "email_verificado": true
+  },
+  {
+    "id": "75da9d0e-a93a-42ec-8478-a5babdade346",
+    "creado_en": "2026-09-22T12:00:13.687Z",
+    "email": "docente2@englishlessons.edu",
+    "nombre": "Prof. Diego Rojas",
+    "rol": "docente",
+    "password_hash": "$2a$10$mu3iyTXydBSeKbp10.rr3ep1p2NDKZaoQ1le/QyKm/C3fXwPaEg7W",
+    "activo": true,
+    "email_verificado": true
+  },
+  {
+    "id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "creado_en": "2026-09-22T12:02:28.910Z",
+    "email": "sirjhoswilliam5@gmail.com",
+    "nombre": "William",
+    "rol": "docente",
+    "password_hash": null,
+    "activo": true,
+    "email_verificado": false,
+    "actualizado_en": "2026-09-22T12:09:51.712Z"
+  }
+]

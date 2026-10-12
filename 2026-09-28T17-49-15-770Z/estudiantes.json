@@ -1,0 +1,57 @@
+[
+  {
+    "id": "516eb1aa-0ce2-468f-a722-7d9cc1899be0",
+    "creado_en": "2026-09-22T12:24:59.404Z",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "nombre": "v1:2g-bMm-KDbkEaRgS:llRyYCjO7BQ6fT5x-zwU4A:CqGS7kw",
+    "codigo_matricula": "TWKDRN",
+    "codigo_externo": null,
+    "activo": true,
+    "retiro_en": null,
+    "purgado_en": null
+  },
+  {
+    "id": "a8eede6c-71ea-4df0-9748-88ce1c37eecb",
+    "creado_en": "2026-09-22T12:24:59.493Z",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "nombre": "v1:IfNS96GHMpiwQsTU:wu3hFxnajUTa6fsZo1gInQ:5OvksnM",
+    "codigo_matricula": "SLUNZL",
+    "codigo_externo": null,
+    "activo": true,
+    "retiro_en": null,
+    "purgado_en": null
+  },
+  {
+    "id": "345d151c-75dc-49e8-a4c8-1469d1eb5ddb",
+    "creado_en": "2026-09-22T12:24:59.572Z",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "nombre": "v1:8-Tjar_b588ucynS:EzmcRumj8qcN2miK_TbjjQ:Yic8S3No",
+    "codigo_matricula": "TXJRAT",
+    "codigo_externo": null,
+    "activo": true,
+    "retiro_en": null,
+    "purgado_en": null
+  },
+  {
+    "id": "334fddb8-1491-4fe3-9e5e-beafdbecf2cf",
+    "creado_en": "2026-09-22T12:24:59.651Z",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "nombre": "v1:Ny6VrNuN-VE6oC8b:uaEium3-yl-MfLfKmCis8w:CPfi2Ss",
+    "codigo_matricula": "JXA9AZ",
+    "codigo_externo": null,
+    "activo": true,
+    "retiro_en": null,
+    "purgado_en": null
+  },
+  {
+    "id": "76d0bc33-f326-42cf-97f5-75a5240ed5cc",
+    "creado_en": "2026-09-22T12:24:59.735Z",
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "nombre": "v1:obUHLEcqUVP32lat:CyJkIQdiBd9Dq9AJBnUCqw:Hwb7Mhv8AA",
+    "codigo_matricula": "CJKTAR",
+    "codigo_externo": null,
+    "activo": true,
+    "retiro_en": null,
+    "purgado_en": null
+  }
+]
