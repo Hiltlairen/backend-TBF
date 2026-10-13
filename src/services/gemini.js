@@ -119,6 +119,29 @@ async function fetchConTimeout(url, opciones, timeoutMs) {
   }
 }
 
+// ── Espaciado entre solicitudes ────────────────────────────
+// El plan gratuito de Gemini limita las solicitudes por minuto. En vez
+// de dispararlas todas juntas (generar 10 variantes = 11 llamadas) y
+// chocar con ese límite, cada llamada pide TURNO: entre el inicio de una
+// y el de la siguiente pasan entre GEMINI_ESPERA_MIN_MS y _MAX_MS (2-4 s
+// por defecto, al azar para no ir a ritmo fijo). El turno se reserva
+// de forma síncrona, así que también ordena las llamadas que salen en
+// paralelo y los reintentos.
+let proximoTurno = 0
+
+async function esperarTurno() {
+  const min = Math.max(0, config.geminiEsperaMinMs)
+  const max = Math.max(min, config.geminiEsperaMaxMs)
+  if (!max) return
+  const ahora = Date.now()
+  const mio = Math.max(ahora, proximoTurno)
+  proximoTurno = mio + min + Math.random() * (max - min)
+  if (mio > ahora) await new Promise((r) => setTimeout(r, mio - ahora))
+}
+
+/** Solo para tests: olvida el turno reservado. */
+export function reiniciarTurnos() { proximoTurno = 0 }
+
 // ── Disyuntor: ¿está disponible la IA? ─────────────────────
 // Si Gemini se queda sin cuota (429) o saturado (503/timeout) después
 // de agotar reintentos y modelos de respaldo, la IA se marca "en pausa"
@@ -206,6 +229,7 @@ export async function callGemini(prompt, {
   for (const modeloActual of modelosAProbar(model)) {
     for (let intento = 0; intento <= reintentos; intento++) {
       try {
+        await esperarTurno()
         const res = await fetchConTimeout(`${ENDPOINT(modeloActual)}?key=${config.geminiApiKey}`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },

@@ -40,6 +40,10 @@ export async function crearAppDePrueba({ conGemini = true } = {}) {
   // Los conteos de llamadas de los tests asumen un solo modelo: que el
   // .env de quien corre los tests no sume modelos de respaldo.
   process.env.GEMINI_MODEL_FALLBACK = ''
+  // Sin pausa entre llamadas: Gemini es un mock en los tests (la pausa
+  // real se prueba aparte, en test/unit/gemini-espaciado.test.js).
+  process.env.GEMINI_ESPERA_MIN_MS = '0'
+  process.env.GEMINI_ESPERA_MAX_MS = '0'
   process.env.JWT_SECRET = 'secreto-de-prueba-no-usar-en-produccion'
   process.env.JWT_EXPIRES_IN = '1h'
   process.env.JWT_STUDENT_EXPIRES_IN = '1h'

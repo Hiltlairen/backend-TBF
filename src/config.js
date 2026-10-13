@@ -37,6 +37,13 @@ export const config = {
   // reintentos deja al docente viendo la pantalla congelada más de un
   // minuto antes de que aparezca cualquier error (ver services/gemini.js).
   geminiTimeoutMs: Number(process.env.GEMINI_TIMEOUT_MS ?? 20000),
+  // Pausa entre una solicitud a Gemini y la siguiente (al azar entre
+  // MIN y MAX, en ms). El plan gratuito limita las solicitudes por
+  // minuto: espaciarlas 2-4 s evita saturarlo sin activar facturación.
+  // Vale para TODAS las llamadas del servidor, también las que salen en
+  // paralelo (variantes) y los reintentos. 0 = sin pausa (tests).
+  geminiEsperaMinMs: Number(process.env.GEMINI_ESPERA_MIN_MS ?? 2000),
+  geminiEsperaMaxMs: Number(process.env.GEMINI_ESPERA_MAX_MS ?? 4000),
   // Modelos a probar EN ORDEN si el principal (geminiModel) agota sus
   // reintentos por saturación (429/503/timeout) — cada modelo de Gemini
   // tiene su propio cupo/capacidad, así que rotar a uno con menos carga

@@ -11,6 +11,8 @@
 process.env.GEMINI_API_KEY = 'fake-para-pruebas'
 process.env.DATA_DIR = './data-e2e'
 process.env.PORT = '4111'
+process.env.GEMINI_ESPERA_MIN_MS = '0'  // Gemini es un mock: sin pausa entre llamadas
+process.env.GEMINI_ESPERA_MAX_MS = '0'
 
 // Empieza siempre de cero: si quedara la caché de una corrida anterior,
 // el conteo de llamadas a Gemini daría 0 y la prueba mentiría.
