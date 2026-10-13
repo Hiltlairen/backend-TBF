@@ -1,7 +1,7 @@
 [
   {
-    "id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
-    "creado_en": "2026-10-13T09:06:28.745Z",
+    "id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
+    "creado_en": "2026-10-13T13:19:17.102Z",
     "nivel": "A1",
     "etapas": 6,
     "umbrales": {
@@ -9,7 +9,7 @@
       "medio": 50
     },
     "curso": "3° B - Mañana",
-    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
+    "clase_id": "d18f179c-1e47-4cd6-bf1a-6287ce0f77e4",
     "lecciones_ids": [
       1,
       2
@@ -4880,14 +4880,14 @@
       ],
       "notas_escena": {}
     },
-    "autor": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "autor": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
     "autor_nombre": "Prof. Laura Mamani",
     "autor_avatar": null,
     "estado": "aprobada"
   },
   {
-    "id": "2754910c-c800-400b-88c1-b37996e81b0e",
-    "creado_en": "2026-10-13T09:06:28.782Z",
+    "id": "8ae7ae09-869f-456a-b463-b226ad4f9638",
+    "creado_en": "2026-10-13T13:19:17.118Z",
     "nivel": "A1",
     "etapas": 6,
     "umbrales": {
@@ -4895,7 +4895,7 @@
       "medio": 50
     },
     "curso": "3° B - Mañana",
-    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
+    "clase_id": "d18f179c-1e47-4cd6-bf1a-6287ce0f77e4",
     "lecciones_ids": [
       1,
       2
@@ -9766,7 +9766,7 @@
       ],
       "notas_escena": {}
     },
-    "autor": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "autor": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
     "autor_nombre": "Prof. Laura Mamani",
     "autor_avatar": null,
     "estado": "aprobada"

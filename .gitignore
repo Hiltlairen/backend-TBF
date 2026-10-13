@@ -2,3 +2,9 @@ node_modules
 dist
 .env
 .env.local
+
+# Datos y respaldos: NUNCA al repositorio (usuarios, estudiantes,
+# resultados). En producción los datos viven en Postgres.
+data/
+data-e2e/
+backups/

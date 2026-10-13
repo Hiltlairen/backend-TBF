@@ -1,16 +1,16 @@
 [
   {
-    "id": "f349e206-0f41-4dc7-a4bd-8527f4055443",
-    "creado_en": "2026-10-13T09:06:29.000Z",
-    "partida_id": "45071353-d8c3-4309-bb40-9693d72cda1e",
-    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "codigo": "59219",
+    "id": "20033530-7420-4836-b8b0-12f35912be1f",
+    "creado_en": "2026-10-13T13:19:17.481Z",
+    "partida_id": "bac30dd0-54c7-4e35-aba6-81627f1bb06f",
+    "sala_id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "codigo": "44423",
     "modo": "juego",
     "estudiante": null,
-    "estudiante_id": "e63f05f2-588f-4265-901b-661c785a700b",
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
+    "estudiante_id": "e2d6573a-2ecd-4cb6-84cd-0bba65d31224",
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
     "ruta_titulo": "Aventura · L1+L2 · A1",
-    "variante": 10,
+    "variante": 6,
     "lecciones": [
       "Welcome to Benjamin Franklin Institute",
       "My family and friends"
@@ -76,7 +76,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.943Z"
+        "en": "2026-10-13T13:19:17.397Z"
       },
       {
         "nodoId": "e2-avanzado",
@@ -102,7 +102,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.948Z"
+        "en": "2026-10-13T13:19:17.410Z"
       },
       {
         "nodoId": "e3-avanzado",
@@ -128,7 +128,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.966Z"
+        "en": "2026-10-13T13:19:17.426Z"
       },
       {
         "nodoId": "e4-avanzado",
@@ -166,7 +166,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.972Z"
+        "en": "2026-10-13T13:19:17.437Z"
       },
       {
         "nodoId": "e5-avanzado",
@@ -217,7 +217,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.980Z"
+        "en": "2026-10-13T13:19:17.461Z"
       },
       {
         "nodoId": "e6-avanzado",
@@ -255,22 +255,22 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.998Z"
+        "en": "2026-10-13T13:19:17.479Z"
       }
     ]
   },
   {
-    "id": "2731d253-2a07-4814-a39a-4a44e148c0b4",
-    "creado_en": "2026-10-13T09:06:29.170Z",
-    "partida_id": "064fd14c-f3c9-4cc8-8a98-55052c9b5fef",
-    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "codigo": "59219",
+    "id": "c6d11214-bd99-40bd-9c71-c1576f551dae",
+    "creado_en": "2026-10-13T13:19:17.735Z",
+    "partida_id": "37b59a46-08ad-4bbb-97ca-c134a1af7432",
+    "sala_id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "codigo": "44423",
     "modo": "juego",
     "estudiante": null,
-    "estudiante_id": "1d5e3688-4e8f-457b-9764-785e5100c028",
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
+    "estudiante_id": "8fecefb2-bf4e-4901-ba7d-40c82695ad4d",
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
     "ruta_titulo": "Aventura · L1+L2 · A1",
-    "variante": 1,
+    "variante": 2,
     "lecciones": [
       "Welcome to Benjamin Franklin Institute",
       "My family and friends"
@@ -332,7 +332,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.104Z"
+        "en": "2026-10-13T13:19:17.643Z"
       },
       {
         "nodoId": "e2-refuerzo",
@@ -370,7 +370,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.120Z"
+        "en": "2026-10-13T13:19:17.660Z"
       },
       {
         "nodoId": "e3-refuerzo",
@@ -396,7 +396,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.126Z"
+        "en": "2026-10-13T13:19:17.674Z"
       },
       {
         "nodoId": "e4-refuerzo",
@@ -422,7 +422,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.135Z"
+        "en": "2026-10-13T13:19:17.691Z"
       },
       {
         "nodoId": "e5-refuerzo",
@@ -462,7 +462,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.154Z"
+        "en": "2026-10-13T13:19:17.712Z"
       },
       {
         "nodoId": "e6-refuerzo",
@@ -500,22 +500,22 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.168Z"
+        "en": "2026-10-13T13:19:17.733Z"
       }
     ]
   },
   {
-    "id": "d4652259-4d63-4921-a7ff-d871280bb423",
-    "creado_en": "2026-10-13T09:06:29.471Z",
-    "partida_id": "3640c285-f60a-4aed-9c40-e5642bf20ab3",
-    "sala_id": "84f619a3-712d-4231-a7fe-70037c9b9739",
-    "codigo": "95345",
+    "id": "ad617c5b-5e60-4bc9-b027-c17b92c39559",
+    "creado_en": "2026-10-13T13:19:18.258Z",
+    "partida_id": "beca330e-abdf-46be-807e-7abcd64c57db",
+    "sala_id": "af75f12f-fd30-46ee-b761-2d08b367ad24",
+    "codigo": "83698",
     "modo": "simple",
     "estudiante": null,
-    "estudiante_id": "21522147-e79d-4fcf-be2f-62d6a246c6fa",
+    "estudiante_id": "bf738607-cb12-4d74-887c-ecb6e3596a72",
     "actividad_codigo": "01-emparejar",
     "actividad_titulo": "Match the words",
-    "variante": 2,
+    "variante": 10,
     "lecciones": [
       "Welcome to Benjamin Franklin Institute",
       "My family and friends"

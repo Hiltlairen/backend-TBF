@@ -1,8 +1,8 @@
 [
   {
-    "id": "84f619a3-712d-4231-a7fe-70037c9b9739",
-    "creado_en": "2026-10-13T09:06:28.668Z",
-    "codigo": "95345",
+    "id": "af75f12f-fd30-46ee-b761-2d08b367ad24",
+    "creado_en": "2026-10-13T13:19:17.051Z",
+    "codigo": "83698",
     "modo": "simple",
     "titulo": "Match the words",
     "curso": "3° B - Mañana",
@@ -10,19 +10,19 @@
     "estudiantes": [
       "Estudiante 5"
     ],
-    "actividad_id": "3f676789-286a-4178-92f0-9be9ad1a8434",
+    "actividad_id": "6bdef6ff-420c-462b-b82e-4bff99275157",
     "ruta_id": null,
-    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
-    "docente_id": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "clase_id": "d18f179c-1e47-4cd6-bf1a-6287ce0f77e4",
+    "docente_id": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
     "docente_nombre": "Prof. Laura Mamani",
     "activa": true,
-    "expira_en": "2026-10-13T15:06:28.668Z",
-    "actualizado_en": "2026-10-13T09:06:29.465Z"
+    "expira_en": "2026-10-13T19:19:17.051Z",
+    "actualizado_en": "2026-10-13T13:19:18.245Z"
   },
   {
-    "id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "creado_en": "2026-10-13T09:06:28.796Z",
-    "codigo": "59219",
+    "id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "creado_en": "2026-10-13T13:19:17.126Z",
+    "codigo": "44423",
     "modo": "juego",
     "titulo": "Aventura · L1+L2 · A1",
     "curso": "3° B - Mañana",
@@ -33,12 +33,12 @@
       "Estudiante 3"
     ],
     "actividad_id": null,
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
-    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
-    "docente_id": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
+    "clase_id": "d18f179c-1e47-4cd6-bf1a-6287ce0f77e4",
+    "docente_id": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
     "docente_nombre": "Prof. Laura Mamani",
     "activa": true,
-    "expira_en": "2026-10-13T15:06:28.796Z",
-    "actualizado_en": "2026-10-13T09:06:29.088Z"
+    "expira_en": "2026-10-13T19:19:17.126Z",
+    "actualizado_en": "2026-10-13T13:19:17.614Z"
   }
 ]

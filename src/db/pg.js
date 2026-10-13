@@ -53,16 +53,27 @@ function encolar(fn) {
 // ============================================================
 //  MAPEADORES: colección del store → tabla de Postgres
 // ============================================================
-// Cada colección declara cómo hidratar (SELECT → doc del store) y
-// cómo escribir (doc del store → UPSERT). Las colecciones que no
-// figuran aquí simplemente no se persisten en Postgres (viven en JSON).
+// Cada colección se guarda en DOS formas a la vez:
+//   · columnas "clásicas" (email, puntaje, curso…) para consultar y
+//     hacer reportes con SQL, y
+//   · `doc` (jsonb): el registro COMPLETO, tal cual lo usa la app
+//     (variantes, grafo de la ruta, historial, notas de curaduría…).
+// Al arrancar, la app se reconstruye desde `doc` (ver hidratar()): así
+// un reinicio con el disco vacío — Render duerme el servicio tras 15
+// min sin uso — no pierde actividades, salas ni resultados.
+//
+// generated_activities y student_results tienen PK numérica (bigint) en
+// el esquema original; el id de la app (uuid) va en `uid`, que es por
+// donde se actualizan (antes cada actualización insertaba un duplicado).
 
 const nn = (v) => (v === undefined ? null : v)
+const doc = (d) => JSON.stringify(d)
 
 const MAPEO = {
   usuarios: {
     tabla: 'usuarios',
-    hidratar: (row) => ({
+    // Filas anteriores a `doc` (solo columnas): se rearman desde ellas.
+    legado: (row) => ({
       id: row.id, email: row.email, nombre: row.nombre, rol: row.rol,
       password_hash: row.password_hash, avatar: row.avatar, activo: row.activo,
       ultimo_acceso: row.ultimo_acceso, creado_en: row.creado_en,
@@ -73,8 +84,8 @@ const MAPEO = {
       email_pendiente_en: row.email_pendiente_en ?? null,
     }),
     upsert: (d) => ({
-      sql: `insert into usuarios (id,email,nombre,rol,password_hash,avatar,activo,ultimo_acceso,aviso_privacidad_version,aviso_privacidad_en,email_verificado,email_pendiente,email_pendiente_en,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,coalesce($14,now()))
+      sql: `insert into usuarios (id,email,nombre,rol,password_hash,avatar,activo,ultimo_acceso,aviso_privacidad_version,aviso_privacidad_en,email_verificado,email_pendiente,email_pendiente_en,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,coalesce($14,now()),$15)
             on conflict (id) do update set
               email=excluded.email, nombre=excluded.nombre, rol=excluded.rol,
               password_hash=excluded.password_hash, avatar=excluded.avatar,
@@ -84,113 +95,116 @@ const MAPEO = {
               email_verificado=excluded.email_verificado,
               email_pendiente=excluded.email_pendiente,
               email_pendiente_en=excluded.email_pendiente_en,
-              actualizado_en=now()`,
+              doc=excluded.doc, actualizado_en=now()`,
       val: [d.id, d.email, d.nombre, d.rol, d.password_hash, nn(d.avatar), d.activo ?? true, nn(d.ultimo_acceso),
             d.aviso_privacidad_version ?? 0, nn(d.aviso_privacidad_en),
-            d.email_verificado ?? false, nn(d.email_pendiente), nn(d.email_pendiente_en), nn(d.creado_en)],
+            d.email_verificado ?? false, nn(d.email_pendiente), nn(d.email_pendiente_en), nn(d.creado_en), doc(d)],
     }),
   },
 
   tokens_auth: {
     tabla: 'tokens_auth',
     upsert: (d) => ({
-      sql: `insert into tokens_auth (id,usuario_id,tipo,token_hash,email_nuevo,expira_en,usado_en,usado_motivo,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()))
-            on conflict (id) do update set usado_en=excluded.usado_en, usado_motivo=excluded.usado_motivo`,
+      sql: `insert into tokens_auth (id,usuario_id,tipo,token_hash,email_nuevo,expira_en,usado_en,usado_motivo,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),$10)
+            on conflict (id) do update set usado_en=excluded.usado_en, usado_motivo=excluded.usado_motivo, doc=excluded.doc`,
       val: [d.id, uuidOrNull(d.usuario_id), d.tipo, d.token_hash, nn(d.email_nuevo),
-            nn(d.expira_en), nn(d.usado_en), nn(d.usado_motivo), nn(d.creado_en)],
+            nn(d.expira_en), nn(d.usado_en), nn(d.usado_motivo), nn(d.creado_en), doc(d)],
     }),
   },
 
   actividades: {
     tabla: 'generated_activities',
-    // No se hidratan a memoria por defecto (pueden ser muchas); se leen bajo demanda.
+    clave: 'uid',
     upsert: (d) => ({
-      sql: `insert into generated_activities (codigo,lecciones_ids,nivel,curso,cantidad,titulo,contenido,docente_id,created_at)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()))`,
-      val: [nn(d.codigo), d.lecciones_ids ?? [], d.nivel ?? 'A2', nn(d.curso), nn(d.cantidad),
-            nn(d.titulo), JSON.stringify(d.contenido ?? {}), uuidOrNull(d.autor), nn(d.creado_en)],
-      // La PK de generated_activities es bigint identity; no forzamos id.
-      sinId: true,
+      sql: `insert into generated_activities (uid,codigo,lecciones_ids,nivel,curso,cantidad,titulo,contenido,docente_id,created_at,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,coalesce($10,now()),$11)
+            on conflict (uid) do update set
+              titulo=excluded.titulo, contenido=excluded.contenido, doc=excluded.doc`,
+      val: [d.id, nn(d.codigo), d.lecciones_ids ?? [], d.nivel ?? 'A2', nn(d.curso), nn(d.cantidad),
+            nn(d.titulo), JSON.stringify(d.contenido ?? {}), uuidOrNull(d.autor), nn(d.creado_en), doc(d)],
     }),
   },
 
   rutas: {
     tabla: 'rutas',
     upsert: (d) => ({
-      sql: `insert into rutas (id,nivel,curso,titulo,lecciones_ids,ruta,contenidos,docente_id,docente_nombre,estado,created_at)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,coalesce($11,now()))
-            on conflict (id) do update set estado=excluded.estado`,
+      sql: `insert into rutas (id,nivel,curso,titulo,lecciones_ids,ruta,contenidos,docente_id,docente_nombre,estado,created_at,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,coalesce($11,now()),$12)
+            on conflict (id) do update set estado=excluded.estado, contenidos=excluded.contenidos, doc=excluded.doc`,
       val: [d.id, d.nivel ?? 'A2', nn(d.curso), nn(d.titulo), d.lecciones_ids ?? [],
             JSON.stringify(d.ruta ?? {}), JSON.stringify(d.contenidos ?? {}),
-            uuidOrNull(d.autor), nn(d.autor_nombre), d.estado ?? 'aprobada', nn(d.creado_en)],
+            uuidOrNull(d.autor), nn(d.autor_nombre), d.estado ?? 'aprobada', nn(d.creado_en), doc(d)],
     }),
   },
 
   salas: {
     tabla: 'salas',
     upsert: (d) => ({
-      sql: `insert into salas (id,codigo,modo,titulo,curso,limite_estudiantes,estudiantes,ruta_id,clase_id,docente_id,docente_nombre,activa,cerrada_por,expira_en,cerrada_en,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,coalesce($16,now()))
+      sql: `insert into salas (id,codigo,modo,titulo,curso,limite_estudiantes,estudiantes,ruta_id,clase_id,docente_id,docente_nombre,activa,cerrada_por,expira_en,cerrada_en,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,coalesce($16,now()),$17)
             on conflict (id) do update set
               estudiantes=excluded.estudiantes, activa=excluded.activa,
-              cerrada_por=excluded.cerrada_por, cerrada_en=excluded.cerrada_en`,
+              cerrada_por=excluded.cerrada_por, cerrada_en=excluded.cerrada_en, doc=excluded.doc`,
       val: [d.id, d.codigo, d.modo, nn(d.titulo), nn(d.curso), d.limite_estudiantes ?? 30,
             d.estudiantes ?? [], uuidOrNull(d.ruta_id), uuidOrNull(d.clase_id), uuidOrNull(d.docente_id), nn(d.docente_nombre),
-            d.activa ?? true, nn(d.cerrada_por), nn(d.expira_en), nn(d.cerrada_en), nn(d.creado_en)],
+            d.activa ?? true, nn(d.cerrada_por), nn(d.expira_en), nn(d.cerrada_en), nn(d.creado_en), doc(d)],
     }),
   },
 
   partidas: {
     tabla: 'partidas',
     upsert: (d) => ({
-      sql: `insert into partidas (id,sala_id,codigo,modo,ruta_id,estudiante,estudiante_id,estado,nodo_actual,historial,puntaje_total,creado_en,terminada_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce($12,now()),$13)
+      sql: `insert into partidas (id,sala_id,codigo,modo,ruta_id,estudiante,estudiante_id,estado,nodo_actual,historial,puntaje_total,creado_en,terminada_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce($12,now()),$13,$14)
             on conflict (id) do update set
               estado=excluded.estado, nodo_actual=excluded.nodo_actual,
               historial=excluded.historial, puntaje_total=excluded.puntaje_total,
-              terminada_en=excluded.terminada_en`,
+              terminada_en=excluded.terminada_en, estudiante=excluded.estudiante, doc=excluded.doc`,
       val: [d.id, uuidOrNull(d.sala_id), nn(d.codigo), nn(d.modo), uuidOrNull(d.ruta_id),
-            d.estudiante, uuidOrNull(d.estudiante_id), d.estado ?? 'en_curso', nn(d.nodoActual), JSON.stringify(d.historial ?? []),
-            d.puntajeTotal ?? 0, nn(d.creado_en), nn(d.terminada_en)],
+            nn(d.estudiante), uuidOrNull(d.estudiante_id), d.estado ?? 'en_curso', nn(d.nodoActual), JSON.stringify(d.historial ?? []),
+            d.puntajeTotal ?? 0, nn(d.creado_en), nn(d.terminada_en), doc(d)],
     }),
   },
 
   resultados: {
     tabla: 'student_results',
+    clave: 'uid',
     upsert: (d) => ({
-      sql: `insert into student_results (partida_id,sala_id,ruta_id,modo,estudiante_nombre,estudiante_id,puntaje,puntaje_maximo,requiere_revision,detalle,fecha)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,coalesce($11,now()))`,
-      val: [uuidOrNull(d.partida_id), uuidOrNull(d.sala_id), uuidOrNull(d.ruta_id), nn(d.modo),
+      sql: `insert into student_results (uid,partida_id,sala_id,ruta_id,modo,estudiante_nombre,estudiante_id,puntaje,puntaje_maximo,requiere_revision,detalle,fecha,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce($12,now()),$13)
+            on conflict (uid) do update set
+              puntaje=excluded.puntaje, requiere_revision=excluded.requiere_revision,
+              estudiante_nombre=excluded.estudiante_nombre, detalle=excluded.detalle, doc=excluded.doc`,
+      val: [d.id, uuidOrNull(d.partida_id), uuidOrNull(d.sala_id), uuidOrNull(d.ruta_id), nn(d.modo),
             d.estudiante ?? d.estudiante_nombre ?? 'Anónimo', uuidOrNull(d.estudiante_id), d.puntaje ?? 0, d.puntaje_maximo ?? 100,
-            d.requiere_revision ?? false, JSON.stringify(d.detalle ?? d.historial ?? null), nn(d.creado_en)],
-      sinId: true,
+            d.requiere_revision ?? false, JSON.stringify(d.detalle ?? d.historial ?? null), nn(d.creado_en), doc(d)],
     }),
   },
 
   clases: {
     tabla: 'clases',
-    hidratar: (row) => ({
+    legado: (row) => ({
       id: row.id, nombre: row.nombre, periodo: row.periodo, book_id: row.book_id,
       docente_id: row.docente_id, creado_por: row.creado_por, activa: row.activa,
       finalizada_en: row.finalizada_en ?? null,
       creado_en: row.creado_en,
     }),
     upsert: (d) => ({
-      sql: `insert into clases (id,nombre,periodo,book_id,docente_id,creado_por,activa,finalizada_en,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()))
+      sql: `insert into clases (id,nombre,periodo,book_id,docente_id,creado_por,activa,finalizada_en,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,coalesce($9,now()),$10)
             on conflict (id) do update set
               finalizada_en=excluded.finalizada_en,
               nombre=excluded.nombre, periodo=excluded.periodo, book_id=excluded.book_id,
-              docente_id=excluded.docente_id, activa=excluded.activa`,
+              docente_id=excluded.docente_id, activa=excluded.activa, doc=excluded.doc`,
       val: [d.id, d.nombre, nn(d.periodo), d.book_id ?? null, uuidOrNull(d.docente_id),
-            uuidOrNull(d.creado_por), d.activa ?? true, nn(d.finalizada_en), nn(d.creado_en)],
+            uuidOrNull(d.creado_por), d.activa ?? true, nn(d.finalizada_en), nn(d.creado_en), doc(d)],
     }),
   },
 
   estudiantes: {
     tabla: 'estudiantes',
-    hidratar: (row) => ({
+    legado: (row) => ({
       id: row.id, clase_id: row.clase_id, nombre: row.nombre,               // `nombre` viaja cifrado (ver services/crypto.js)
       codigo_matricula: row.codigo_matricula, activo: row.activo, creado_en: row.creado_en,
       codigo_externo: row.codigo_externo ?? null,                           // referencia del instituto; NO es de acceso
@@ -199,15 +213,16 @@ const MAPEO = {
       purgado_motivo: row.purgado_motivo ?? null,
     }),
     upsert: (d) => ({
-      sql: `insert into estudiantes (id,clase_id,nombre,codigo_matricula,codigo_externo,activo,retiro_en,purgado_en,purgado_motivo,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,coalesce($10,now()))
+      sql: `insert into estudiantes (id,clase_id,nombre,codigo_matricula,codigo_externo,activo,retiro_en,purgado_en,purgado_motivo,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,coalesce($10,now()),$11)
             on conflict (id) do update set
               clase_id=excluded.clase_id, nombre=excluded.nombre,
               codigo_matricula=excluded.codigo_matricula, codigo_externo=excluded.codigo_externo,
               activo=excluded.activo,
-              retiro_en=excluded.retiro_en, purgado_en=excluded.purgado_en, purgado_motivo=excluded.purgado_motivo`,
-      val: [d.id, uuidOrNull(d.clase_id), d.nombre, d.codigo_matricula, nn(d.codigo_externo), d.activo ?? true,
-            nn(d.retiro_en), nn(d.purgado_en), nn(d.purgado_motivo), nn(d.creado_en)],
+              retiro_en=excluded.retiro_en, purgado_en=excluded.purgado_en, purgado_motivo=excluded.purgado_motivo,
+              doc=excluded.doc`,
+      val: [d.id, uuidOrNull(d.clase_id), nn(d.nombre), nn(d.codigo_matricula), nn(d.codigo_externo), d.activo ?? true,
+            nn(d.retiro_en), nn(d.purgado_en), nn(d.purgado_motivo), nn(d.creado_en), doc(d)],
     }),
   },
 
@@ -217,26 +232,40 @@ const MAPEO = {
       // enviado_por_nombre solo se guarda para salas sueltas sin clase
       // (sin identidad que duplicar); si hay estudiante_id, ese campo
       // queda null a propósito — ver rooms.routes.js.
-      sql: `insert into revisiones (id,tipo,referencia_id,estado,enviado_por,enviado_por_nombre,enviado_por_estudiante_id,resumen,payload,decidido_por,nota,creado_en,actualizado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce($12,now()),$13)
+      sql: `insert into revisiones (id,tipo,referencia_id,estado,enviado_por,enviado_por_nombre,enviado_por_estudiante_id,resumen,payload,decidido_por,nota,creado_en,actualizado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,coalesce($12,now()),$13,$14)
             on conflict (id) do update set
               estado=excluded.estado, decidido_por=excluded.decidido_por,
-              nota=excluded.nota, actualizado_en=now()`,
+              nota=excluded.nota, doc=excluded.doc, actualizado_en=now()`,
       val: [d.id, d.tipo, nn(String(d.referencia_id ?? '')) || null, d.estado ?? 'pendiente',
             uuidOrNull(d.enviado_por), nn(d.enviado_por_nombre), uuidOrNull(d.enviado_por_estudiante_id), nn(d.resumen),
-            d.payload ? JSON.stringify(d.payload) : null, uuidOrNull(d.decidido_por), nn(d.nota),
-            nn(d.creado_en), nn(d.actualizado_en)],
+            d.payload ? JSON.stringify(d.payload) : null, uuidOrNull(d.revisado_por ?? d.decidido_por), nn(d.comentario ?? d.nota),
+            nn(d.creado_en), nn(d.actualizado_en), doc(d)],
     }),
   },
 
   generaciones: {
     tabla: 'generaciones',
     upsert: (d) => ({
-      sql: `insert into generaciones (id,tipo,referencia_id,autor,codigo,nivel,curso,clase_id,llamadas_gemini,tokens_entrada,tokens_salida,desde_cache,modelo,creado_en)
-            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,coalesce($14,now()))`,
+      sql: `insert into generaciones (id,tipo,referencia_id,autor,codigo,nivel,curso,clase_id,llamadas_gemini,tokens_entrada,tokens_salida,desde_cache,modelo,creado_en,doc)
+            values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,coalesce($14,now()),$15)
+            on conflict (id) do update set doc=excluded.doc`,
       val: [d.id, d.tipo, nn(String(d.referencia_id ?? '')) || null, uuidOrNull(d.autor), nn(d.codigo),
             nn(d.nivel), nn(d.curso), uuidOrNull(d.clase_id), d.llamadas_gemini ?? 0, d.tokens_entrada ?? 0, d.tokens_salida ?? 0,
-            d.desde_cache ?? false, nn(d.modelo), nn(d.creado_en)],
+            d.desde_cache ?? false, nn(d.modelo), nn(d.creado_en), doc(d)],
+    }),
+  },
+
+  // Bitácora (revisiones, moderación, purgas, backups) y, ojo, también el
+  // VOCABULARIO que agregan los docentes (tipo 'vocab', ver
+  // store.agregarVocabulario): sin esta tabla esas palabras se perdían.
+  auditoria: {
+    tabla: 'auditoria',
+    upsert: (d) => ({
+      sql: `insert into auditoria (id,tipo,creado_en,doc)
+            values ($1,$2,coalesce($3,now()),$4)
+            on conflict (id) do update set doc=excluded.doc`,
+      val: [d.id, nn(d.tipo), nn(d.creado_en), doc(d)],
     }),
   },
 }
@@ -255,8 +284,8 @@ export function persistir(coleccion, doc) {
 
 export function persistirBorrado(coleccion, id) {
   if (!pool || !MAPEO[coleccion]) return
-  const tabla = MAPEO[coleccion].tabla
-  encolar(() => pool.query(`delete from ${tabla} where id = $1`, [id]))
+  const { tabla, clave = 'id' } = MAPEO[coleccion]
+  encolar(() => pool.query(`delete from ${tabla} where ${clave} = $1`, [id]))
 }
 
 // ── Hidratar el store desde Postgres al arrancar ───────────
@@ -275,12 +304,17 @@ export async function hidratar() {
     console.error('  [pg] no se pudo leer el contenido:', e.message)
   }
 
-  // Colecciones de estado que sí hidratamos a memoria
+  // Estado del sistema: TODAS las colecciones se rearman desde `doc`.
+  // Filas viejas sin `doc` (escritas antes de esta columna) se rearman
+  // desde sus columnas si la colección sabe cómo (`legado`); si no, se
+  // saltan — nunca fueron legibles por la app.
   for (const [col, m] of Object.entries(MAPEO)) {
-    if (!m.hidratar) continue
     try {
-      const rows = (await pool.query(`select * from ${m.tabla}`)).rows
-      out[col] = rows.map(m.hidratar)
+      const orden = m.tabla === 'auditoria' ? ' order by creado_en' : ''
+      const rows = (await pool.query(`select * from ${m.tabla}${orden}`)).rows
+      out[col] = rows
+        .map((row) => (row.doc ? row.doc : m.legado ? m.legado(row) : null))
+        .filter((d) => d?.id)
     } catch (e) {
       console.error(`  [pg] no se pudo hidratar ${col}:`, e.message)
     }

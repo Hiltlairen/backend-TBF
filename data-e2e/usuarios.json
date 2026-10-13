@@ -1,57 +1,57 @@
 [
   {
-    "id": "ef2dc25a-f000-45a7-a44d-8bfaa70f5c32",
-    "creado_en": "2026-10-13T09:06:26.084Z",
+    "id": "ab6b46e5-24ac-4aa2-9822-6176f4a58dd9",
+    "creado_en": "2026-10-13T13:19:14.960Z",
     "email": "admin@englishlessons.edu",
     "nombre": "Dirección Académica",
     "rol": "admin",
-    "password_hash": "$2a$10$PXw6WEqNm6kplgXxRrkewO7CBpNtb/2XPnL3HCYuG2vyYUvV2uNJ2",
+    "password_hash": "$2a$10$RIpJkx6vor2L3PlvgdzJL.fftZFBS4RjnIzifdD2HISxRyHeCCXiO",
     "activo": true,
     "email_verificado": true,
-    "ultimo_acceso": "2026-10-13T09:06:27.337Z",
-    "actualizado_en": "2026-10-13T09:06:27.337Z"
+    "ultimo_acceso": "2026-10-13T13:19:16.041Z",
+    "actualizado_en": "2026-10-13T13:19:16.041Z"
   },
   {
-    "id": "b92c546b-f2e3-4b05-a4e1-4fdfb32a52ec",
-    "creado_en": "2026-10-13T09:06:26.161Z",
+    "id": "aacc5d94-d785-412a-8e22-bd7bd0c22b80",
+    "creado_en": "2026-10-13T13:19:15.020Z",
     "email": "curaduria@englishlessons.edu",
     "nombre": "Mesa de Curaduría",
     "rol": "curador",
-    "password_hash": "$2a$10$9cwG7rYesTc63UGhC2iowOb1zFFRJppBuoSmE6WBap2V4Z15TYBv.",
+    "password_hash": "$2a$10$nu/zj7X/yT/OkbkQ8N069.ZsKtzNpm/XHvVubzbHVRFeDmq7lXOrO",
     "activo": true,
     "email_verificado": true,
-    "ultimo_acceso": "2026-10-13T09:06:27.248Z",
-    "actualizado_en": "2026-10-13T09:06:27.248Z"
+    "ultimo_acceso": "2026-10-13T13:19:15.974Z",
+    "actualizado_en": "2026-10-13T13:19:15.974Z"
   },
   {
-    "id": "65bd985f-5a84-454f-9f24-03761a2742c1",
-    "creado_en": "2026-10-13T09:06:26.240Z",
+    "id": "d3df50a0-71cc-4c2a-bb03-4a7d9de4d31b",
+    "creado_en": "2026-10-13T13:19:15.078Z",
     "email": "revision2@englishlessons.edu",
     "nombre": "Ana Quispe (revisora)",
     "rol": "curador",
-    "password_hash": "$2a$10$WSbR9evBYrkzoHlX47MvHeG7XlnNKcJxien5vwWhpLL4LG3NzL83q",
+    "password_hash": "$2a$10$EkuZjbpP0ROOV0smav3tnO6W4bjmetvLHpZrtlK4i7/t93n76yqbe",
     "activo": true,
     "email_verificado": true
   },
   {
-    "id": "27293d07-e6a6-4e1a-a3da-22674e225090",
-    "creado_en": "2026-10-13T09:06:26.324Z",
+    "id": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
+    "creado_en": "2026-10-13T13:19:15.134Z",
     "email": "docente@englishlessons.edu",
     "nombre": "Prof. Laura Mamani",
     "rol": "docente",
-    "password_hash": "$2a$10$N0/UXebi8FNAPjWVDfZF4eo3FeWQBdqtB4zUixArreU.MWICByUT.",
+    "password_hash": "$2a$10$l/jisB4uTVhobciJppsWluJXe.8IFRDmlfOPQ/5pFNq.74K8r/Lxu",
     "activo": true,
     "email_verificado": true,
-    "ultimo_acceso": "2026-10-13T09:06:27.151Z",
-    "actualizado_en": "2026-10-13T09:06:27.151Z"
+    "ultimo_acceso": "2026-10-13T13:19:15.905Z",
+    "actualizado_en": "2026-10-13T13:19:15.905Z"
   },
   {
-    "id": "76df9a96-78a8-4eb5-a32d-09f25212a8f1",
-    "creado_en": "2026-10-13T09:06:26.401Z",
+    "id": "507fb766-53e2-4cf9-8cc6-ce75fa64608d",
+    "creado_en": "2026-10-13T13:19:15.199Z",
     "email": "docente2@englishlessons.edu",
     "nombre": "Prof. Diego Rojas",
     "rol": "docente",
-    "password_hash": "$2a$10$Xcf/Sa3mVhAhyY/CZz6PeO8Du02LsOw4uhndMzFLbGLDbDxguTAlq",
+    "password_hash": "$2a$10$.S0uchMRt45x7jxDwe8hVe5WOgnGuRjpf.VbU1rbNpnMPWVXN67Ru",
     "activo": true,
     "email_verificado": true
   }

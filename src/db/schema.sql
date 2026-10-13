@@ -307,3 +307,41 @@ alter table public.partidas alter column estudiante drop not null;
 
 -- Revisiones: entregas de estudiantes con identidad (sin duplicar su nombre)
 alter table public.revisiones add column if not exists enviado_por_estudiante_id uuid references public.estudiantes(id);
+
+-- ============================================================
+-- REGISTRO COMPLETO (doc jsonb) — que un reinicio no pierda nada
+-- ------------------------------------------------------------
+-- Cada tabla guarda, además de sus columnas, el registro COMPLETO tal
+-- cual lo usa la app (variantes, grafo, historial, notas…). Al
+-- arrancar, el servidor se reconstruye desde `doc` (db/pg.js →
+-- hidratar). Sin esto, actividades, salas y resultados se escribían
+-- pero no se podían volver a leer: en Render (disco efímero, el
+-- servicio se duerme tras 15 min) se perdían en cada reinicio.
+-- ============================================================
+alter table public.usuarios             add column if not exists doc jsonb;
+alter table public.tokens_auth          add column if not exists doc jsonb;
+alter table public.clases               add column if not exists doc jsonb;
+alter table public.estudiantes          add column if not exists doc jsonb;
+alter table public.rutas                add column if not exists doc jsonb;
+alter table public.salas                add column if not exists doc jsonb;
+alter table public.partidas             add column if not exists doc jsonb;
+alter table public.revisiones           add column if not exists doc jsonb;
+alter table public.generaciones         add column if not exists doc jsonb;
+alter table public.generated_activities add column if not exists doc jsonb;
+alter table public.student_results      add column if not exists doc jsonb;
+
+-- Estas dos tienen PK numérica: el id de la app (uuid) va en `uid` y
+-- es por donde se actualizan (antes cada cambio insertaba otra fila).
+alter table public.generated_activities add column if not exists uid uuid;
+alter table public.student_results      add column if not exists uid uuid;
+create unique index if not exists ux_generated_activities_uid on public.generated_activities(uid);
+create unique index if not exists ux_student_results_uid      on public.student_results(uid);
+
+-- Bitácora del sistema y vocabulario agregado por docentes (tipo 'vocab').
+create table if not exists public.auditoria (
+  id        uuid primary key,
+  tipo      text,
+  doc       jsonb not null,
+  creado_en timestamptz not null default now()
+);
+create index if not exists idx_auditoria_tipo on public.auditoria(tipo);

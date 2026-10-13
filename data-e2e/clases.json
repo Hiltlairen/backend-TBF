@@ -1,12 +1,12 @@
 [
   {
-    "id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
-    "creado_en": "2026-10-13T09:06:27.494Z",
+    "id": "d18f179c-1e47-4cd6-bf1a-6287ce0f77e4",
+    "creado_en": "2026-10-13T13:19:16.167Z",
     "nombre": "3° B - Mañana",
     "periodo": null,
     "book_id": 1,
-    "docente_id": "27293d07-e6a6-4e1a-a3da-22674e225090",
-    "creado_por": "ef2dc25a-f000-45a7-a44d-8bfaa70f5c32",
+    "docente_id": "0c93fde5-6a14-44aa-abb0-98be18f0d963",
+    "creado_por": "ab6b46e5-24ac-4aa2-9822-6176f4a58dd9",
     "activa": true,
     "finalizada_en": null
   }

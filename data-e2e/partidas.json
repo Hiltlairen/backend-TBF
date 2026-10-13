@@ -1,29 +1,29 @@
 [
   {
-    "id": "5f42a1b1-864b-4ac9-b640-ba1bd267d360",
-    "creado_en": "2026-10-13T09:06:28.866Z",
-    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "codigo": "59219",
+    "id": "8302c2c9-ba13-4222-a25b-9ff4b289aed6",
+    "creado_en": "2026-10-13T13:19:17.216Z",
+    "sala_id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "codigo": "44423",
     "modo": "juego",
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
-    "variante": 4,
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
+    "variante": 5,
     "estudiante": null,
-    "estudiante_id": "08cd5a73-58c7-4e56-af7f-fa7531f881ed",
+    "estudiante_id": "469f8c58-19f2-40b5-a151-7997ae3885e5",
     "estado": "en_curso",
     "nodoActual": "e1-estandar",
     "historial": [],
     "puntajeTotal": 0
   },
   {
-    "id": "45071353-d8c3-4309-bb40-9693d72cda1e",
-    "creado_en": "2026-10-13T09:06:28.925Z",
-    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "codigo": "59219",
+    "id": "bac30dd0-54c7-4e35-aba6-81627f1bb06f",
+    "creado_en": "2026-10-13T13:19:17.378Z",
+    "sala_id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "codigo": "44423",
     "modo": "juego",
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
-    "variante": 10,
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
+    "variante": 6,
     "estudiante": null,
-    "estudiante_id": "e63f05f2-588f-4265-901b-661c785a700b",
+    "estudiante_id": "e2d6573a-2ecd-4cb6-84cd-0bba65d31224",
     "estado": "terminada",
     "nodoActual": null,
     "historial": [
@@ -76,7 +76,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.943Z"
+        "en": "2026-10-13T13:19:17.397Z"
       },
       {
         "nodoId": "e2-avanzado",
@@ -102,7 +102,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.948Z"
+        "en": "2026-10-13T13:19:17.410Z"
       },
       {
         "nodoId": "e3-avanzado",
@@ -128,7 +128,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.966Z"
+        "en": "2026-10-13T13:19:17.426Z"
       },
       {
         "nodoId": "e4-avanzado",
@@ -166,7 +166,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.972Z"
+        "en": "2026-10-13T13:19:17.437Z"
       },
       {
         "nodoId": "e5-avanzado",
@@ -217,7 +217,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.980Z"
+        "en": "2026-10-13T13:19:17.461Z"
       },
       {
         "nodoId": "e6-avanzado",
@@ -255,23 +255,23 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:28.998Z"
+        "en": "2026-10-13T13:19:17.479Z"
       }
     ],
     "puntajeTotal": 100,
-    "actualizado_en": "2026-10-13T09:06:28.998Z",
-    "terminada_en": "2026-10-13T09:06:28.998Z"
+    "actualizado_en": "2026-10-13T13:19:17.479Z",
+    "terminada_en": "2026-10-13T13:19:17.479Z"
   },
   {
-    "id": "064fd14c-f3c9-4cc8-8a98-55052c9b5fef",
-    "creado_en": "2026-10-13T09:06:29.090Z",
-    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
-    "codigo": "59219",
+    "id": "37b59a46-08ad-4bbb-97ca-c134a1af7432",
+    "creado_en": "2026-10-13T13:19:17.618Z",
+    "sala_id": "4fbe48d4-7d1b-4d09-8b47-798c1c310cfa",
+    "codigo": "44423",
     "modo": "juego",
-    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
-    "variante": 1,
+    "ruta_id": "829c5f0b-4664-44c1-baf2-f88944c88e10",
+    "variante": 2,
     "estudiante": null,
-    "estudiante_id": "1d5e3688-4e8f-457b-9764-785e5100c028",
+    "estudiante_id": "8fecefb2-bf4e-4901-ba7d-40c82695ad4d",
     "estado": "terminada",
     "nodoActual": null,
     "historial": [
@@ -320,7 +320,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.104Z"
+        "en": "2026-10-13T13:19:17.643Z"
       },
       {
         "nodoId": "e2-refuerzo",
@@ -358,7 +358,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.120Z"
+        "en": "2026-10-13T13:19:17.660Z"
       },
       {
         "nodoId": "e3-refuerzo",
@@ -384,7 +384,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.126Z"
+        "en": "2026-10-13T13:19:17.674Z"
       },
       {
         "nodoId": "e4-refuerzo",
@@ -410,7 +410,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.135Z"
+        "en": "2026-10-13T13:19:17.691Z"
       },
       {
         "nodoId": "e5-refuerzo",
@@ -450,7 +450,7 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.154Z"
+        "en": "2026-10-13T13:19:17.712Z"
       },
       {
         "nodoId": "e6-refuerzo",
@@ -488,23 +488,23 @@
             }
           ]
         },
-        "en": "2026-10-13T09:06:29.168Z"
+        "en": "2026-10-13T13:19:17.733Z"
       }
     ],
     "puntajeTotal": 8,
-    "actualizado_en": "2026-10-13T09:06:29.168Z",
-    "terminada_en": "2026-10-13T09:06:29.168Z"
+    "actualizado_en": "2026-10-13T13:19:17.733Z",
+    "terminada_en": "2026-10-13T13:19:17.733Z"
   },
   {
-    "id": "3640c285-f60a-4aed-9c40-e5642bf20ab3",
-    "creado_en": "2026-10-13T09:06:29.466Z",
-    "sala_id": "84f619a3-712d-4231-a7fe-70037c9b9739",
-    "codigo": "95345",
+    "id": "beca330e-abdf-46be-807e-7abcd64c57db",
+    "creado_en": "2026-10-13T13:19:18.246Z",
+    "sala_id": "af75f12f-fd30-46ee-b761-2d08b367ad24",
+    "codigo": "83698",
     "modo": "simple",
     "estudiante": null,
-    "estudiante_id": "21522147-e79d-4fcf-be2f-62d6a246c6fa",
+    "estudiante_id": "bf738607-cb12-4d74-887c-ecb6e3596a72",
     "estado": "terminada",
-    "variante": 2,
+    "variante": 10,
     "historial": [
       {
         "actividad": "01-emparejar",
@@ -542,7 +542,7 @@
       }
     ],
     "puntajeTotal": 0,
-    "terminada_en": "2026-10-13T09:06:29.470Z",
-    "actualizado_en": "2026-10-13T09:06:29.470Z"
+    "terminada_en": "2026-10-13T13:19:18.255Z",
+    "actualizado_en": "2026-10-13T13:19:18.255Z"
   }
 ]
