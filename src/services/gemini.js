@@ -74,7 +74,8 @@ const medidores = new AsyncLocalStorage()
  * antes de fallar sigue contando.
  */
 export async function medirTokens(fn) {
-  const tokens = { entrada: 0, salida: 0, llamadas: 0 }
+  // porProveedor: { deepseek: { llamadas, entrada, salida }, gemini: {...} }
+  const tokens = { entrada: 0, salida: 0, llamadas: 0, porProveedor: {} }
   try {
     const resultado = await medidores.run(tokens, fn)
     return { resultado, tokens }
@@ -214,7 +215,7 @@ function pausaPorCuota(cuerpo) {
 // `pausa` sugerida en ms cuando es cuota).
 
 /** Suma una respuesta al contador global y al medidor de la operación en curso. */
-function contarUso(uso) {
+function contarUso(uso, proveedor) {
   const tokens = tokensDe(uso)
   consumo.llamadas += 1
   consumo.tokensEntrada += tokens.entrada
@@ -224,6 +225,10 @@ function contarUso(uso) {
     medidor.llamadas += 1
     medidor.entrada += tokens.entrada
     medidor.salida += tokens.salida
+    // Desglose por proveedor: el panel de cada proveedor solo muestra lo
+    // suyo; esto explica la diferencia cuando respondieron los dos.
+    const p = (medidor.porProveedor[proveedor] ??= { llamadas: 0, entrada: 0, salida: 0 })
+    p.llamadas += 1; p.entrada += tokens.entrada; p.salida += tokens.salida
   }
 }
 
@@ -258,11 +263,11 @@ async function llamarDeepSeek(prompt, { temperature, maxOutputTokens, reintentos
           thinking: { type: 'disabled' },
           stream: false,
         }),
-      }, config.geminiTimeoutMs)
+      }, config.deepseekTimeoutMs)
     } catch (e) {
       // Timeout o sin conexión: para el docente es lo mismo que saturado.
       ultimo = fallo('El servicio de IA no respondió a tiempo.', 'saturado')
-      logger.warn({ proveedor: 'deepseek', err: e.message }, '[ia] sin respuesta')
+      logger.warn({ proveedor: 'deepseek', err: e.message, timeoutMs: config.deepseekTimeoutMs }, '[ia] sin respuesta')
       await pausaBackoff(intento)
       continue
     }
@@ -292,7 +297,7 @@ async function llamarDeepSeek(prompt, { temperature, maxOutputTokens, reintentos
     const u = data.usage ?? {}
     // completion_tokens ya incluye los de razonamiento (si los hubiera).
     const uso = { promptTokenCount: u.prompt_tokens ?? 0, candidatesTokenCount: u.completion_tokens ?? 0, thoughtsTokenCount: 0 }
-    contarUso(uso)
+    contarUso(uso, 'deepseek')
 
     const eleccion = data.choices?.[0]
     if (eleccion?.finish_reason === 'content_filter') {
@@ -355,7 +360,7 @@ async function llamarGemini(prompt, { temperature, maxOutputTokens, reintentos, 
 
       const data = await res.json()
       const uso = data.usageMetadata || {}
-      contarUso(uso)
+      contarUso(uso, 'gemini')
 
       // El propio Gemini pudo bloquear la solicitud o la respuesta por
       // `safetySettings` (arriba) — NO es un fallo transitorio: se corta

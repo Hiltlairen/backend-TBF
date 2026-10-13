@@ -28,6 +28,10 @@ export const config = {
   // Nombre oficial del modelo (api-docs.deepseek.com): "deepseek-flash".
   deepseekModel: process.env.DEEPSEEK_MODEL || 'deepseek-flash',
   deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+  // DeepSeek escribe más lento que Gemini: una variante de ~1.500 tokens
+  // puede tardar 30-50 s. Con los 20 s de Gemini se cortaba a mitad,
+  // reintentaba y terminaba respondiendo Gemini (más caro, con razonamiento).
+  deepseekTimeoutMs: Number(process.env.DEEPSEEK_TIMEOUT_MS ?? 90000),
 
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
   // 'gemini-flash-latest' es un ALIAS que Google mantiene apuntando

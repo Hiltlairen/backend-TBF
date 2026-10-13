@@ -105,6 +105,8 @@ function registrarGeneracion({ tipo, referencia_id, autor, codigo, nivel, curso,
     // motivo, reparaciones): explica por qué una generación costó más de
     // lo estimado. Ej.: "v3 · validar: 1 rechazadas → 15-laberinto-palabras (...)".
     traza: (telemetria?.traza ?? []).slice(0, 120),
+    // { deepseek: { llamadas, entrada, salida }, gemini: {...} }
+    por_proveedor: telemetria?.porProveedor ?? {},
   })
 }
 
@@ -156,8 +158,11 @@ function descartarBloqueadas(bloqueadas, { origen, codigo, usuario }) {
 function conCosto(telemetria, estimacion, variantes) {
   const entrada = telemetria?.tokensEntrada ?? 0
   const salida = telemetria?.tokensSalida ?? 0
+  // El desglose por proveedor queda solo en la bitácora (generaciones):
+  // la interfaz no muestra qué proveedor de IA se usa.
+  const { porProveedor: _soloBitacora, ...publica } = telemetria ?? {}
   return {
-    ...telemetria,
+    ...publica,
     tokensTotal: entrada + salida,
     costoUSD: costoUSD({ entrada, salida }),
     estimado: estimacion ? { total: estimacion.total, costoUSD: estimacion.costoUSD } : null,

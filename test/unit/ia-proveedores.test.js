@@ -45,7 +45,8 @@ describe('DeepSeek como proveedor principal', () => {
 
     expect(resultado.json).toEqual({ hola: 'mundo' })
     expect(resultado.modelo).toBe('deepseek-flash')
-    expect(tokens).toEqual({ entrada: 120, salida: 80, llamadas: 1 })
+    expect(tokens).toMatchObject({ entrada: 120, salida: 80, llamadas: 1 })
+    expect(tokens.porProveedor).toEqual({ deepseek: { llamadas: 1, entrada: 120, salida: 80 } })
 
     const [p] = pedidos
     expect(p.url).toBe('https://api.deepseek.com/chat/completions')
@@ -62,6 +63,26 @@ describe('DeepSeek como proveedor principal', () => {
     const r = await callGemini('JSON')
     expect(r.json).toEqual({ ok: true })
     expect(pedidos.filter((x) => x.a === 'deepseek')).toHaveLength(2)
+  })
+})
+
+describe('desglose por proveedor', () => {
+  it('cuando responden los dos, el medidor separa cuánto gastó cada uno', async () => {
+    let n = 0
+    simular({
+      deepseek: () => (n++ === 0 ? respuestaDeepSeek('{"a":1}') : json({}, 402)),
+      gemini: () => respuestaGemini('{"b":2}'),
+    })
+    const { tokens } = await medirTokens(async () => { await callGemini('JSON'); await callGemini('JSON') })
+    expect(tokens.porProveedor).toEqual({
+      deepseek: { llamadas: 1, entrada: 120, salida: 80 },
+      gemini: { llamadas: 1, entrada: 10, salida: 5 },
+    })
+    expect(tokens).toMatchObject({ llamadas: 2, entrada: 130, salida: 85 })
+  })
+
+  it('DeepSeek tiene su propio tiempo de espera, más largo que el de Gemini', () => {
+    expect(config.deepseekTimeoutMs).toBeGreaterThanOrEqual(60_000)
   })
 })
 

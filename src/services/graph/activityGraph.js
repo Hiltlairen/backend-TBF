@@ -184,7 +184,7 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs,
   let modoLocal = false
   // Todo lo que Gemini cobre durante esta generación, incluso si falla
   // a mitad de camino y termina en el generador local.
-  const gasto = { entrada: 0, salida: 0, llamadas: 0 }
+  const gasto = { entrada: 0, salida: 0, llamadas: 0, porProveedor: {} }
 
   // ── SALVAVIDAS ─────────────────────────────────────────────
   // Sin IA, solo se arman las actividades de VOCABULARIO (palabra ↔
@@ -243,6 +243,7 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs,
       // también los de intentos que fallaron antes del generador local.
       tokensEntrada: gasto.entrada,
       tokensSalida: gasto.salida,
+      porProveedor: gasto.porProveedor,
       traza: estadoFinal.traza,
       modoLocal,
     },
@@ -265,6 +266,18 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs,
  * Una variante que no pudo armar alguna actividad igual se devuelve
  * (con sus `fallidas`): la ruta decide qué hacer con ella.
  */
+/** Junta el desglose por proveedor de varias variantes. */
+function sumarPorProveedor(telemetrias) {
+  const total = {}
+  for (const t of telemetrias) {
+    for (const [nombre, p] of Object.entries(t.porProveedor ?? {})) {
+      const acc = (total[nombre] ??= { llamadas: 0, entrada: 0, salida: 0 })
+      acc.llamadas += p.llamadas; acc.entrada += p.entrada; acc.salida += p.salida
+    }
+  }
+  return total
+}
+
 export async function generarVariantes({ vocabulario, lecciones, nivel = 'A2', specs, cantidad = 1, sinIA = null }) {
   const n = Math.max(1, Math.round(cantidad) || 1)
   const base = { vocabulario, lecciones, nivel, specs, sinIA }
@@ -306,6 +319,7 @@ export async function generarVariantes({ vocabulario, lecciones, nivel = 'A2', s
       llamadasGemini: suma('llamadasGemini'),
       tokensEntrada: suma('tokensEntrada'),
       tokensSalida: suma('tokensSalida'),
+      porProveedor: sumarPorProveedor(tel),
       desdeCache: tel.every((x) => x.desdeCache),
       modoLocal: tel.some((x) => x.modoLocal),
       llamadasEvitadas: suma('llamadasEvitadas'),
