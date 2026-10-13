@@ -14,7 +14,7 @@ let llegadas
 beforeEach(() => {
   llegadas = []
   reiniciarTurnos()
-  Object.assign(config, { geminiApiKey: 'clave-de-prueba', geminiModelFallback: [], geminiEsperaMinMs: 150, geminiEsperaMaxMs: 150 })
+  Object.assign(config, { deepseekApiKey: '', geminiApiKey: 'clave-de-prueba', geminiModelFallback: [], geminiEsperaMinMs: 150, geminiEsperaMaxMs: 150 })
   globalThis.fetch = async () => {
     llegadas.push(Date.now())
     return new Response(JSON.stringify({

@@ -40,6 +40,9 @@ export async function crearAppDePrueba({ conGemini = true } = {}) {
   // Los conteos de llamadas de los tests asumen un solo modelo: que el
   // .env de quien corre los tests no sume modelos de respaldo.
   process.env.GEMINI_MODEL_FALLBACK = ''
+  // Los tests usan Gemini simulado (helpers/geminiMock.mjs): que una
+  // DEEPSEEK_API_KEY del .env no haga llamadas reales.
+  process.env.DEEPSEEK_API_KEY = ''
   // Sin pausa entre llamadas: Gemini es un mock en los tests (la pausa
   // real se prueba aparte, en test/unit/gemini-espaciado.test.js).
   process.env.GEMINI_ESPERA_MIN_MS = '0'

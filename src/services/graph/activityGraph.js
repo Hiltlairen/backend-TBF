@@ -277,7 +277,7 @@ export async function generarVariantes({ vocabulario, lecciones, nivel = 'A2', s
   // demás siguen por el camino local: reintentar la IA N veces solo
   // haría esperar al docente para terminar igual en lo mismo.
   const sinIALocal = sinIA ?? (primera.telemetria.modoLocal
-    ? { disponible: false, motivo: 'fallo', mensaje: 'Gemini falló al generar la primera variante' }
+    ? { disponible: false, motivo: 'fallo', mensaje: 'la IA falló al generar la primera variante' }
     : null)
 
   const pendientes = Array.from({ length: n - 1 }, (_, i) => i + 2)

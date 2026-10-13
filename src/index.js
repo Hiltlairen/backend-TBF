@@ -7,7 +7,8 @@ import cors from 'cors'
 import morgan from 'morgan'
 import rateLimit from 'express-rate-limit'
 import { pathToFileURL } from 'node:url'
-import { config, tieneGemini, tieneDB } from './config.js'
+import { config, tieneIA, tieneDB } from './config.js'
+import { descripcionModelos } from './services/gemini.js'
 import { sembrar, USUARIOS_SEMILLA } from './db/seed.js'
 import { iniciarPool, pingDB, hidratar } from './db/pg.js'
 import { aplicarContenidoDB, aplicarColeccionesDB } from './db/store.js'
@@ -93,7 +94,8 @@ const limiteInvitado = rateLimit({
 })
 
 app.get('/api/salud', (_req, res) => res.json({
-  ok: true, entorno: config.entorno, gemini: tieneGemini(), modelo: config.geminiModel,
+  // Público: sin nombres de proveedor ni de modelo.
+  ok: true, entorno: config.entorno, ia: tieneIA(),
 }))
 
 app.use('/api/auth/login', limiteLogin)
@@ -167,7 +169,7 @@ export async function arrancar({ escuchar = true } = {}) {
   if (escuchar) {
     app.listen(config.puerto, () => {
       console.log(`\n  API lista en http://localhost:${config.puerto}`)
-      console.log(`  Gemini: ${tieneGemini() ? `configurada (${config.geminiModel})` : 'SIN API KEY — revisa el .env'}`)
+      console.log(`  IA: ${tieneIA() ? descripcionModelos() : 'SIN API KEY — revisa el .env (DEEPSEEK_API_KEY / GEMINI_API_KEY)'}`)
       console.log(`  Base de datos: ${tieneDB() ? (dbOk ? 'Postgres/Supabase conectado' : 'configurada pero sin conexión (fallback JSON)') : 'JSON local (sin DATABASE_URL)'}`)
       console.log(`  Retención de identidad: ${config.retencionDias} días tras baja/fin de curso`)
       if (adminCreado) {

@@ -13,12 +13,12 @@
 //   GET  /uso             → telemetría de consumo de Gemini
 // ============================================================
 import { Router } from 'express'
-import { config, tieneGemini, tieneDB } from '../config.js'
+import { config, tieneIA, tieneDB } from '../config.js'
 import { requiereAuth, requiereRol } from '../middleware/auth.js'
 import { vocabularioCompleto, leccionPorId, insertar, listar, buscar, libros as listarLibros } from '../db/store.js'
 import { vocabularioDeBD } from '../db/pg.js'
 import { generarVariantes } from '../services/graph/activityGraph.js'
-import { consumo, estadoIA, callGemini } from '../services/gemini.js'
+import { consumo, estadoIA, callGemini, descripcionModelos } from '../services/gemini.js'
 import { statsCache, limpiarCache, borrarCache } from '../services/cache.js'
 import {
   ACTIVITY_SCENES, NOTAS_COHERENCIA, elegirEscenario, PREGUNTAS_CONFIG, preguntasDe, cantidadValida,
@@ -100,7 +100,7 @@ function registrarGeneracion({ tipo, referencia_id, autor, codigo, nivel, curso,
     variantes: variantes ?? 0,
     desde_cache: Boolean(telemetria?.desdeCache),
     modo_local: Boolean(telemetria?.modoLocal),
-    modelo: config.geminiModel,
+    modelo: descripcionModelos(),
   })
 }
 
@@ -200,7 +200,7 @@ function respuestaSinIA(ia, codigos) {
 /** Estado de la IA tras una generación que cayó al modo local a mitad de camino. */
 function iaTrasFallo() {
   const ia = estadoIA()
-  return ia.disponible ? { disponible: false, motivo: 'fallo', mensaje: 'Gemini falló al generar esta vez' } : ia
+  return ia.disponible ? { disponible: false, motivo: 'fallo', mensaje: 'la IA falló al generar esta vez' } : ia
 }
 
 // La clase es OBLIGATORIA: el docente solo genera para los cursos que le
@@ -319,7 +319,7 @@ r.post('/generar', requiereAuth, requiereRol('admin', 'docente'), validar(genera
       registrar(null, 0)
       if (salida.telemetria.modoLocal) return res.status(503).json(respuestaSinIA(iaTrasFallo(), [codigo]))
       return res.status(502).json({
-        error: 'Gemini no devolvió una actividad válida.',
+        error: 'La IA no devolvió una actividad válida.',
         detalle: salida.variantes[0]?.fallidas,
       })
     }
@@ -610,8 +610,8 @@ r.get('/meta/uso', requiereAuth, requiereRol('admin', 'docente'), (_req, res) =>
       aciertosCache: consumo.aciertosCache,
     },
     cache: statsCache(),
-    modelo: config.geminiModel,
-    keyConfigurada: tieneGemini(),
+    // Sin nombre de proveedor: el panel solo muestra si la IA está configurada.
+    iaConfigurada: tieneIA(),
   })
 })
 

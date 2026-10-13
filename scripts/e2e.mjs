@@ -11,6 +11,7 @@
 process.env.GEMINI_API_KEY = 'fake-para-pruebas'
 process.env.DATA_DIR = './data-e2e'
 process.env.PORT = '4111'
+process.env.DEEPSEEK_API_KEY = ''       // el e2e usa Gemini simulado
 process.env.GEMINI_ESPERA_MIN_MS = '0'  // Gemini es un mock: sin pausa entre llamadas
 process.env.GEMINI_ESPERA_MAX_MS = '0'
 

@@ -1,6 +1,9 @@
 // ============================================================
-// gemini.js — Cliente del backend (la API Key NUNCA sale de aquí)
+// gemini.js — Cliente del servicio de IA (las API keys NUNCA salen de aquí)
 // ============================================================
+// Proveedores en cadena: DeepSeek primero, Gemini como última opción
+// (ver callGemini, al final). El nombre del archivo y de callGemini se
+// conservan para no tocar a quienes los importan.
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { config } from '../config.js'
 import { logger } from './logger.js'
@@ -109,7 +112,7 @@ async function fetchConTimeout(url, opciones, timeoutMs) {
     return await fetch(url, { ...opciones, signal: controlador.signal })
   } catch (e) {
     if (e.name === 'AbortError') {
-      const err = new Error(`Gemini no respondió en ${timeoutMs / 1000}s (timeout).`)
+      const err = new Error(`El servicio de IA no respondió en ${timeoutMs / 1000}s (timeout).`)
       err.saturado = true
       throw err
     }
@@ -153,9 +156,10 @@ export function reiniciarTurnos() { proximoTurno = 0 }
 const PAUSA_CUOTA_MS = 10 * 60_000
 const PAUSA_CUOTA_DIARIA_MS = 60 * 60_000
 const PAUSA_SATURADO_MS = 2 * 60_000
+// Textos que ve el docente: sin nombre de proveedor.
 const MENSAJES_CAIDA = {
-  cuota: 'se agotó la cuota de la API de Gemini',
-  saturado: 'Gemini está saturado o no responde',
+  cuota: 'se agotó el saldo o la cuota del servicio de IA',
+  saturado: 'el servicio de IA está saturado o no responde',
 }
 const caida = { hasta: 0, motivo: null, desde: null }
 
@@ -175,8 +179,8 @@ function marcarRecuperada() {
 
 /** Estado actual de la IA, para el panel y para decidir qué se puede generar. */
 export function estadoIA() {
-  if (!config.geminiApiKey) {
-    return { disponible: false, motivo: 'sin_clave', mensaje: 'el servidor no tiene una API key de Gemini configurada' }
+  if (!config.deepseekApiKey && !config.geminiApiKey) {
+    return { disponible: false, motivo: 'sin_clave', mensaje: 'el servidor no tiene una API key de IA configurada' }
   }
   if (Date.now() < caida.hasta) {
     return {
@@ -194,12 +198,205 @@ function pausaPorCuota(cuerpo) {
   return /PerDay/i.test(cuerpo) ? PAUSA_CUOTA_DIARIA_MS : PAUSA_CUOTA_MS
 }
 
+// ============================================================
+//  PROVEEDORES DE IA, en cadena
+// ============================================================
+// Se prueban EN ORDEN (proveedores()): DeepSeek primero y Gemini como
+// última opción. Si uno se queda sin saldo/cuota, está saturado o
+// falla, se pasa al siguiente; solo si fallan todos se pausa la IA (el
+// disyuntor de arriba). El nombre del proveedor queda en los logs del
+// servidor: lo que puede llegar a la pantalla dice "el servicio de IA".
+//
+// Cada proveedor devuelve lo mismo: { json, uso, modelo }, con `uso` en
+// la forma de Gemini (promptTokenCount / candidatesTokenCount /
+// thoughtsTokenCount) para que tokensDe() y el resto no cambien.
+// Si falla, el error trae `tipo`: 'cuota' | 'saturado' | 'otro' (y
+// `pausa` sugerida en ms cuando es cuota).
+
+/** Suma una respuesta al contador global y al medidor de la operación en curso. */
+function contarUso(uso) {
+  const tokens = tokensDe(uso)
+  consumo.llamadas += 1
+  consumo.tokensEntrada += tokens.entrada
+  consumo.tokensSalida += tokens.salida
+  const medidor = medidores.getStore()
+  if (medidor) {
+    medidor.llamadas += 1
+    medidor.entrada += tokens.entrada
+    medidor.salida += tokens.salida
+  }
+}
+
+const fallo = (mensaje, tipo, extra = {}) => Object.assign(new Error(mensaje), { tipo, ...extra })
+const pausaBackoff = (intento) =>
+  new Promise((r) => setTimeout(r, Math.min(1000 * 2 ** intento, 8000) + Math.random() * 400))
+
+// ── DeepSeek (API estilo OpenAI: /chat/completions) ─────────
+// Modo JSON (`response_format: json_object`, que exige que el prompt
+// diga "JSON": los nuestros lo dicen) y SIN modo de razonamiento
+// (`thinking: disabled`): responde más rápido, cuesta menos y respeta
+// `temperature`, que es lo que hace distintas a las variantes.
+async function llamarDeepSeek(prompt, { temperature, maxOutputTokens, reintentos }) {
+  const modelo = config.deepseekModel
+  let ultimo = fallo('El servicio de IA no respondió.', 'saturado')
+  for (let intento = 0; intento <= reintentos; intento++) {
+    await esperarTurno()
+    let res
+    try {
+      res = await fetchConTimeout(`${config.deepseekBaseUrl.replace(/\/$/, '')}/chat/completions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${config.deepseekApiKey}` },
+        body: JSON.stringify({
+          model: modelo,
+          messages: [
+            { role: 'system', content: 'Responde únicamente con un objeto JSON válido, sin texto adicional.' },
+            { role: 'user', content: prompt },
+          ],
+          temperature,
+          max_tokens: maxOutputTokens,
+          response_format: { type: 'json_object' },
+          thinking: { type: 'disabled' },
+          stream: false,
+        }),
+      }, config.geminiTimeoutMs)
+    } catch (e) {
+      // Timeout o sin conexión: para el docente es lo mismo que saturado.
+      ultimo = fallo('El servicio de IA no respondió a tiempo.', 'saturado')
+      logger.warn({ proveedor: 'deepseek', err: e.message }, '[ia] sin respuesta')
+      await pausaBackoff(intento)
+      continue
+    }
+
+    if (res.status === 402) {
+      // Sin saldo: reintentar no sirve, se pasa al siguiente proveedor.
+      logger.warn({ proveedor: 'deepseek' }, '[ia] sin saldo (HTTP 402)')
+      throw fallo('El servicio de IA se quedó sin saldo.', 'cuota', { pausa: PAUSA_CUOTA_MS })
+    }
+    if (res.status === 401 || res.status === 403) {
+      logger.error({ proveedor: 'deepseek', status: res.status }, '[ia] API key rechazada: revisa DEEPSEEK_API_KEY')
+      throw fallo('El servicio de IA rechazó la API key.', 'otro')
+    }
+    if (res.status === 429 || res.status >= 500) {
+      logger.warn({ proveedor: 'deepseek', status: res.status, intento }, '[ia] saturado')
+      ultimo = fallo('El servicio de IA está saturado.', 'saturado')
+      await pausaBackoff(intento)
+      continue
+    }
+    if (!res.ok) {
+      const cuerpo = await res.text().catch(() => '')
+      logger.error({ proveedor: 'deepseek', status: res.status, cuerpo: cuerpo.slice(0, 300) }, '[ia] error')
+      throw fallo(`El servicio de IA respondió con un error (HTTP ${res.status}).`, 'otro')
+    }
+
+    const data = await res.json()
+    const u = data.usage ?? {}
+    // completion_tokens ya incluye los de razonamiento (si los hubiera).
+    const uso = { promptTokenCount: u.prompt_tokens ?? 0, candidatesTokenCount: u.completion_tokens ?? 0, thoughtsTokenCount: 0 }
+    contarUso(uso)
+
+    const eleccion = data.choices?.[0]
+    if (eleccion?.finish_reason === 'content_filter') {
+      throw Object.assign(fallo('El contenido generado se marcó como inseguro y se descartó.', 'otro'), { status: 422 })
+    }
+    // El modo JSON a veces devuelve contenido vacío (aviso de DeepSeek):
+    // se reintenta como un JSON inválido.
+    try {
+      return { json: JSON.parse(limpiarJson(eleccion?.message?.content ?? '')), uso, modelo }
+    } catch {
+      ultimo = fallo('El servicio de IA devolvió un JSON inválido.', 'otro')
+    }
+  }
+  throw ultimo
+}
+
+// ── Gemini (última opción) ──────────────────────────────────
+async function llamarGemini(prompt, { temperature, maxOutputTokens, reintentos, model }) {
+  let ultimo = null
+  for (const modeloActual of modelosAProbar(model)) {
+    for (let intento = 0; intento <= reintentos; intento++) {
+      await esperarTurno()
+      let res
+      try {
+        res = await fetchConTimeout(`${ENDPOINT(modeloActual)}?key=${config.geminiApiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: { temperature, maxOutputTokens, responseMimeType: 'application/json' },
+            safetySettings: SAFETY_SETTINGS,
+          }),
+        }, config.geminiTimeoutMs)
+      } catch (e) {
+        ultimo = fallo('El servicio de IA no respondió a tiempo.', 'saturado', { pausa: PAUSA_SATURADO_MS })
+        logger.warn({ proveedor: 'gemini', modelo: modeloActual, err: e.message }, '[ia] sin respuesta')
+        await pausaBackoff(intento)
+        continue
+      }
+
+      if (res.status === 429 || res.status === 503) {
+        const cuerpo = typeof res.text === 'function' ? await res.text().catch(() => '') : ''
+        if (res.status === 429 && /quota|RESOURCE_EXHAUSTED/i.test(cuerpo)) {
+          // Sin cuota, reintentar el MISMO modelo no sirve: se pasa
+          // directo al siguiente modelo de respaldo (si hay).
+          logger.warn({ proveedor: 'gemini', modelo: modeloActual }, '[ia] sin cuota (HTTP 429)')
+          ultimo = fallo('Se agotó la cuota del servicio de IA.', 'cuota', { pausa: pausaPorCuota(cuerpo) })
+          break
+        }
+        logger.warn({ proveedor: 'gemini', modelo: modeloActual, status: res.status, intento }, '[ia] saturado')
+        ultimo = fallo('El servicio de IA está saturado.', 'saturado', { pausa: PAUSA_SATURADO_MS })
+        await pausaBackoff(intento)
+        continue
+      }
+      if (!res.ok) {
+        const cuerpo = await res.text().catch(() => '')
+        logger.error({ proveedor: 'gemini', status: res.status, cuerpo: cuerpo.slice(0, 300) }, '[ia] error')
+        throw fallo(`El servicio de IA respondió con un error (HTTP ${res.status}).`, 'otro')
+      }
+
+      const data = await res.json()
+      const uso = data.usageMetadata || {}
+      contarUso(uso)
+
+      // El propio Gemini pudo bloquear la solicitud o la respuesta por
+      // `safetySettings` (arriba) — NO es un fallo transitorio: se corta
+      // con 422 y la ruta que llamó decide (routes/activities.routes.js).
+      if (data.promptFeedback?.blockReason || data.candidates?.[0]?.finishReason === 'SAFETY') {
+        throw Object.assign(fallo('El contenido generado se marcó como inseguro y se descartó.', 'otro'), { status: 422 })
+      }
+
+      const texto = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
+      try {
+        return { json: JSON.parse(limpiarJson(texto)), uso, modelo: modeloActual }
+      } catch {
+        ultimo = fallo('El servicio de IA devolvió un JSON inválido.', 'otro')
+      }
+    }
+    // Se agotaron los reintentos con este modelo: el for de afuera pasa
+    // al siguiente modelo de respaldo, si hay.
+  }
+  throw ultimo ?? fallo('El servicio de IA no respondió.', 'saturado')
+}
+
+/** Proveedores configurados, en el orden en que se prueban. */
+function proveedores() {
+  const lista = []
+  if (config.deepseekApiKey) lista.push({ nombre: 'deepseek', llamar: llamarDeepSeek })
+  if (config.geminiApiKey) lista.push({ nombre: 'gemini', llamar: llamarGemini })
+  return lista
+}
+
+/** Para logs y bitácora: "deepseek-flash → gemini-flash-latest". Nunca va a la pantalla. */
+export function descripcionModelos() {
+  return proveedores()
+    .map((p) => (p.nombre === 'deepseek' ? config.deepseekModel : config.geminiModel))
+    .join(' → ') || 'sin IA'
+}
+
 /**
- * Llama a Gemini y devuelve JSON parseado.
- * Reintenta con backoff exponencial (+jitter) en 429/503/timeout, y si
- * el modelo pedido sigue saturado tras agotar sus reintentos, prueba
- * los modelos de GEMINI_MODEL_FALLBACK (si hay alguno configurado)
- * antes de rendirse.
+ * Pide JSON al servicio de IA: prueba los proveedores en orden
+ * (DeepSeek → Gemini), cada uno con sus reintentos. Devuelve
+ * { json, uso, modelo }. (Se sigue llamando callGemini para no tocar a
+ * quienes la usan.)
  */
 export async function callGemini(prompt, {
   temperature = 0.7,
@@ -209,8 +406,9 @@ export async function callGemini(prompt, {
   // true = probar aunque la IA esté en pausa (botón "Comprobar ahora")
   forzar = false,
 } = {}) {
-  if (!config.geminiApiKey) {
-    const err = new Error('GEMINI_API_KEY no está configurada en el .env del servidor.')
+  const cadena = proveedores()
+  if (!cadena.length) {
+    const err = new Error('El servidor no tiene una API key de IA configurada.')
     err.status = 500
     throw err
   }
@@ -221,112 +419,22 @@ export async function callGemini(prompt, {
     throw err
   }
 
-  let ultimoError
-  // Tipo del último fallo: si al final fue por cuota/saturación, se pausa la IA.
-  let ultimoTipo = null
-  let pausaSugerida = PAUSA_SATURADO_MS
-
-  for (const modeloActual of modelosAProbar(model)) {
-    for (let intento = 0; intento <= reintentos; intento++) {
-      try {
-        await esperarTurno()
-        const res = await fetchConTimeout(`${ENDPOINT(modeloActual)}?key=${config.geminiApiKey}`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{ parts: [{ text: prompt }] }],
-            generationConfig: { temperature, maxOutputTokens, responseMimeType: 'application/json' },
-            safetySettings: SAFETY_SETTINGS,
-          }),
-        }, config.geminiTimeoutMs).catch((e) => {
-          if (e.saturado) return { status: 503, saturadoPorTimeout: true }
-          throw e
-        })
-
-        if (res.status === 429 || res.status === 503) {
-          const cuerpo = typeof res.text === 'function' ? await res.text().catch(() => '') : ''
-          if (res.status === 429 && /quota|RESOURCE_EXHAUSTED/i.test(cuerpo)) {
-            // Sin cuota, reintentar el MISMO modelo no sirve: se pasa
-            // directo al siguiente modelo de respaldo (si hay).
-            ultimoTipo = 'cuota'
-            pausaSugerida = pausaPorCuota(cuerpo)
-            ultimoError = new Error(`Gemini (${modeloActual}) sin cuota disponible (HTTP 429).`)
-            break
-          }
-          ultimoTipo = 'saturado'
-          pausaSugerida = PAUSA_SATURADO_MS
-          ultimoError = new Error(
-            res.saturadoPorTimeout
-              ? `Gemini (${modeloActual}) no respondió a tiempo — probablemente saturado.`
-              : `Gemini (${modeloActual}) saturado (HTTP ${res.status}).`
-          )
-          // Backoff exponencial con jitter: crece más rápido que el fijo
-          // anterior (1.2s/2.4s) pero sigue acotado — si el proveedor está
-          // saturado por minutos, más reintentos locales no lo arreglan;
-          // para eso está el fallback de modelos, arriba.
-          const base = Math.min(1000 * 2 ** intento, 8000)
-          await new Promise((r) => setTimeout(r, base + Math.random() * 400))
-          continue
-        }
-        if (!res.ok) {
-          const cuerpo = await res.text().catch(() => '')
-          const err = new Error(`Error de Gemini (HTTP ${res.status}). ${cuerpo.slice(0, 200)}`)
-          err.status = 502
-          throw err
-        }
-
-        // Gemini respondió: la IA está disponible (aunque esta respuesta
-        // en particular después resulte inválida o bloqueada).
-        marcarRecuperada()
-        const data = await res.json()
-        const uso = data.usageMetadata || {}
-        const tokens = tokensDe(uso)
-        consumo.llamadas += 1
-        consumo.tokensEntrada += tokens.entrada
-        consumo.tokensSalida += tokens.salida
-        const medidor = medidores.getStore()
-        if (medidor) {
-          medidor.llamadas += 1
-          medidor.entrada += tokens.entrada
-          medidor.salida += tokens.salida
-        }
-
-        // El propio Gemini pudo bloquear la solicitud o la respuesta por
-        // `safetySettings` (arriba) — esto NO es un fallo transitorio, así
-        // que no se reintenta: se corta con 422 y se deja que la ruta que
-        // llamó decida qué hacer (routes/activities.routes.js).
-        if (data.promptFeedback?.blockReason) {
-          const err = new Error(`Gemini bloqueó la solicitud por seguridad (${data.promptFeedback.blockReason}).`)
-          err.status = 422
-          throw err
-        }
-        if (data.candidates?.[0]?.finishReason === 'SAFETY') {
-          const err = new Error('Gemini generó contenido marcado como inseguro; se descartó automáticamente.')
-          err.status = 422
-          throw err
-        }
-
-        const texto = data.candidates?.[0]?.content?.parts?.[0]?.text ?? ''
-        try {
-          return { json: JSON.parse(limpiarJson(texto)), uso, modelo: modeloActual }
-        } catch {
-          ultimoError = new Error('Gemini devolvió un JSON inválido.')
-          ultimoTipo = 'otro'
-          continue
-        }
-      } catch (e) {
-        if (e.status && e.status !== 502) throw e
-        ultimoError = e
-        // Sin status = no se pudo ni conectar (sin internet, DNS…): para
-        // el docente es lo mismo que una IA saturada.
-        ultimoTipo = e.status ? 'otro' : 'saturado'
-      }
+  let ultimo = null
+  for (const p of cadena) {
+    try {
+      const r = await p.llamar(prompt, { temperature, maxOutputTokens, reintentos, model })
+      marcarRecuperada()
+      return r
+    } catch (e) {
+      if (e.status === 422) throw e   // contenido bloqueado: otro proveedor no lo arregla
+      ultimo = e
+      if (p !== cadena.at(-1)) logger.warn({ proveedor: p.nombre, err: e.message }, '[ia] falló, se prueba el siguiente proveedor')
     }
-    // Se agotaron los reintentos con este modelo — si hay un modelo de
-    // respaldo, el for de afuera pasa al siguiente; si no, sigue abajo.
   }
-  if (ultimoTipo === 'cuota' || ultimoTipo === 'saturado') marcarCaida(ultimoTipo, pausaSugerida)
-  const err = ultimoError ?? new Error('Fallo desconocido llamando a Gemini.')
+  if (ultimo?.tipo === 'cuota' || ultimo?.tipo === 'saturado') {
+    marcarCaida(ultimo.tipo, ultimo.pausa ?? PAUSA_SATURADO_MS)
+  }
+  const err = ultimo ?? new Error('Fallo desconocido del servicio de IA.')
   err.status = err.status ?? 502
   throw err
 }

@@ -19,7 +19,16 @@ export const config = {
   puerto:      Number(process.env.PORT ?? 4000),
   entorno:     process.env.NODE_ENV ?? 'development',
 
-  // ── Gemini: la key vive SOLO aquí, jamás llega al navegador ──
+  // ── IA: DeepSeek primero, Gemini como última opción ──────────
+  // Las keys viven SOLO aquí, jamás llegan al navegador. Se prueba
+  // DeepSeek; si se queda sin saldo, se satura o falla, se usa Gemini
+  // (ver services/gemini.js → callGemini). Con una sola key configurada,
+  // se usa solo ese proveedor.
+  deepseekApiKey: process.env.DEEPSEEK_API_KEY ?? '',
+  // Nombre oficial del modelo (api-docs.deepseek.com): "deepseek-flash".
+  deepseekModel: process.env.DEEPSEEK_MODEL || 'deepseek-flash',
+  deepseekBaseUrl: process.env.DEEPSEEK_BASE_URL || 'https://api.deepseek.com',
+
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
   // 'gemini-flash-latest' es un ALIAS que Google mantiene apuntando
   // siempre a la versión Flash estable más reciente (hoy sería
@@ -61,8 +70,10 @@ export const config = {
   // inventan acá — sin ellos, la app muestra solo tokens. Cópialos de
   // https://ai.google.dev/gemini-api/docs/pricing para tu GEMINI_MODEL.
   // Ojo: los tokens de "pensamiento" se cobran como salida.
-  geminiPrecioEntrada1M: numeroOpcional(process.env.GEMINI_PRECIO_ENTRADA_1M),
-  geminiPrecioSalida1M: numeroOpcional(process.env.GEMINI_PRECIO_SALIDA_1M),
+  // IA_PRECIO_* vale para el proveedor principal (DeepSeek); los nombres
+  // GEMINI_PRECIO_* se siguen aceptando por compatibilidad.
+  geminiPrecioEntrada1M: numeroOpcional(process.env.IA_PRECIO_ENTRADA_1M ?? process.env.GEMINI_PRECIO_ENTRADA_1M),
+  geminiPrecioSalida1M: numeroOpcional(process.env.IA_PRECIO_SALIDA_1M ?? process.env.GEMINI_PRECIO_SALIDA_1M),
   // VARIANTES de una actividad: juegos de preguntas distintos que se
   // reparten al azar entre los estudiantes de la clase al entrar a la
   // sala (para que no se copien). Con IA se generan hasta VARIANTES_IA
@@ -165,4 +176,6 @@ export const config = {
 }
 
 export const tieneGemini = () => Boolean(config.geminiApiKey)
+/** ¿Hay algún proveedor de IA configurado? */
+export const tieneIA = () => Boolean(config.deepseekApiKey || config.geminiApiKey)
 export const tieneDB = () => Boolean(config.databaseUrl)
