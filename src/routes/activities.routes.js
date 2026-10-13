@@ -101,6 +101,10 @@ function registrarGeneracion({ tipo, referencia_id, autor, codigo, nivel, curso,
     desde_cache: Boolean(telemetria?.desdeCache),
     modo_local: Boolean(telemetria?.modoLocal),
     modelo: descripcionModelos(),
+    // Qué pasó en cada llamada (bible, lote, rechazos de validación con su
+    // motivo, reparaciones): explica por qué una generación costó más de
+    // lo estimado. Ej.: "v3 · validar: 1 rechazadas → 15-laberinto-palabras (...)".
+    traza: (telemetria?.traza ?? []).slice(0, 120),
   })
 }
 

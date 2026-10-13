@@ -335,8 +335,10 @@ check('el docente ve los resultados', resultados.estado === 200 && resultados.da
   `${resultados.datos?.resultados?.length} filas`)
 check('guarda el recorrido completo', Boolean(resultados.datos.resultados[0]?.historial?.length))
 
+check('una categoría que la lección no tiene se rechaza',
+  (await req('POST', '/api/library/vocabulario', { lesson_id: 1, categoria: 'Inventada', ingles: 'x', espanol: 'x' }, tokDoc)).estado === 400)
 const vocab = await req('POST', '/api/library/vocabulario', {
-  lesson_id: 1, categoria: 'Prueba', ingles: 'skyline', espanol: 'horizonte',
+  lesson_id: 1, categoria: 'útiles escolares (school stuff)', ingles: 'skyline', espanol: 'horizonte',
 }, tokDoc)
 check('el docente sube vocabulario', vocab.estado === 201)
 check('y entra a curaduría', vocab.datos.enCuraduria === true)

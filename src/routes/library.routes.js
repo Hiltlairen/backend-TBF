@@ -61,10 +61,19 @@ r.get('/vocabulario', requiereAuth, (req, res) => {
 
 // POST /api/library/vocabulario
 r.post('/vocabulario', requiereAuth, requiereRol('admin', 'curador', 'docente'), validar(agregarVocabularioSchema), (req, res) => {
-  const { lesson_id, categoria, ingles, espanol } = req.body
+  const { lesson_id, ingles, espanol } = req.body
   if (!leccionPorId(lesson_id)) return res.status(404).json({ error: 'Esa lección no existe.' })
 
-  const registro = agregarVocabulario({ lesson_id, categoria, ingles, espanol, autor: req.usuario.id })
+  // La categoría tiene que ser una de las que YA tiene la lección (no
+  // texto libre): así no aparecen "Animales", "animales" y "Animal" como
+  // categorías distintas. Se guarda con la escritura exacta existente.
+  const categorias = [...new Set(vocabularioCompleto([lesson_id]).map((v) => v.categoria))]
+  const categoria = categorias.find((c) => c.trim().toLowerCase() === req.body.categoria.trim().toLowerCase())
+  if (categorias.length && !categoria) {
+    return res.status(400).json({ error: 'Elige una de las categorías que ya tiene esta lección.', categorias })
+  }
+
+  const registro = agregarVocabulario({ lesson_id, categoria: categoria ?? req.body.categoria, ingles, espanol, autor: req.usuario.id })
 
   // Si lo sube un docente, entra a curaduría. Curador/admin lo dan por aprobado.
   const requiereRevision = req.usuario.rol === 'docente'
