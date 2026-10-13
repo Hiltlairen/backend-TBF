@@ -48,6 +48,9 @@ const Estado = Annotation.Root({
   specs:       Annotation({ reducer: ultimo, default: () => [] }),
   cacheKey:    Annotation({ reducer: ultimo, default: () => null }),
   variante:    Annotation({ reducer: ultimo, default: () => 1 }),
+  // Cuántas vueltas de reparación se permiten (la variante 1 sí se
+  // repara; las demás se descartan si salen mal: ver generarVariantes).
+  maxReparaciones: Annotation({ reducer: ultimo, default: () => MAX_REPARACIONES }),
 
   // Trabajo
   bible:       Annotation({ reducer: ultimo, default: () => null }),
@@ -140,14 +143,14 @@ async function nodoGuardar(s) {
   if (!s.desdeCache && s.cacheKey) {
     setCache(s.cacheKey, { actividades: s.actividades, bible: s.bible })
   }
-  return { traza: [`fin: ${s.llamadas} llamada(s) a Gemini en total`] }
+  return { traza: [`fin: ${s.llamadas} llamada(s) a la IA en total`] }
 }
 
 // ── Aristas condicionales ──────────────────────────────────
 // Las variantes 2…N reciben el bible de la 1: van directo al lote.
 const trasCache   = (s) => (s.desdeCache ? 'guardar' : s.bible ? 'lote' : 'contexto')
 const trasValidar = (s) =>
-  (s.fallidas.length > 0 && s.vueltas < MAX_REPARACIONES) ? 'reparar' : 'guardar'
+  (s.fallidas.length > 0 && s.vueltas < s.maxReparaciones) ? 'reparar' : 'guardar'
 
 const grafo = new StateGraph(Estado)
   .addNode('cache',    nodoCache)
@@ -175,7 +178,7 @@ export const appGrafo = grafo.compile()
  * @param {Array}  p.specs  [{codigo, escenario, interaccion, presencia, cantidad, tiempo, penalizacion}]
  * @param {object} [p.sinIA]  estadoIA() si la IA está en pausa: no se intenta llamar a Gemini
  */
-export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs, variante = 1, sinIA = null, bible = null }) {
+export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs, variante = 1, sinIA = null, bible = null, maxReparaciones = MAX_REPARACIONES }) {
   if (!specs?.length) throw new Error('No se indicaron actividades a generar.')
 
   const cacheKey = claveCache({ lecciones, nivel, specs, variante })
@@ -213,7 +216,7 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs,
   } else {
     try {
       const { resultado, tokens } = await medirTokens(() =>
-        appGrafo.invoke({ vocabulario, lecciones, nivel, specs, cacheKey, variante, bible }))
+        appGrafo.invoke({ vocabulario, lecciones, nivel, specs, cacheKey, variante, bible, maxReparaciones }))
       Object.assign(gasto, tokens)
       estadoFinal = resultado
     } catch (e) {
@@ -296,7 +299,10 @@ export async function generarVariantes({ vocabulario, lecciones, nivel = 'A2', s
   const pendientes = Array.from({ length: n - 1 }, (_, i) => i + 2)
   const trabajador = async () => {
     for (let v = pendientes.shift(); v != null; v = pendientes.shift()) {
-      resultados[v - 1] = await generarLote({ ...base, variante: v, bible, sinIA: sinIALocal })
+      // Sin reparaciones: una variante de más que sale mal se descarta.
+      // Repararla cuesta lo mismo que generar otra, y con N variantes
+      // perder una no se nota.
+      resultados[v - 1] = await generarLote({ ...base, variante: v, bible, sinIA: sinIALocal, maxReparaciones: 0 })
     }
   }
   const hilos = sinIALocal ? 1 : Math.max(1, config.variantesConcurrencia)

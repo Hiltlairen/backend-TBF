@@ -257,10 +257,55 @@ export function validarActividad(codigo, data) {
 }
 
 /** Valida un lote. @returns {{validas: object, fallidas: Array<{codigo, motivo}>}} */
+// ── Arreglos automáticos (sin IA, gratis) ──────────────────
+// Antes, un solo nivel mal hecho descartaba la actividad ENTERA y se
+// pedía una reparación a la IA (~1.400 tokens cada una; en el laberinto
+// eran casi la mitad del gasto). Ahora se corrige en código lo que tiene
+// arreglo obvio: se recortan los distractores de más y se quitan los
+// ítems que rompen una regla, SIEMPRE que queden suficientes ítems
+// buenos para la actividad. Si no quedan, sigue siendo inválida.
+const SANEADORES = {
+  '15-laberinto-palabras': (a) => {
+    if (!Array.isArray(a?.niveles)) return a
+    const vistos = new Set()
+    const niveles = a.niveles
+      .filter((n) => n?.oracion && n?.traduccion && Array.isArray(n.palabras_en_orden)
+        && n.palabras_en_orden.length >= 4 && n.palabras_en_orden.length <= 8)
+      .map((n, i) => {
+        const palabras = new Set(n.palabras_en_orden.map((p) => String(p).toLowerCase()))
+        const distractores = (Array.isArray(n.distractores) ? n.distractores : [])
+          .filter((d) => !palabras.has(String(d).toLowerCase())).slice(0, 4)
+        const id = n.id && !vistos.has(n.id) ? n.id : `N${i + 1}`
+        vistos.add(id)
+        return { ...n, id, distractores }
+      })
+    return niveles.length >= 3 ? { ...a, niveles } : a
+  },
+  '16-rompecabezas-oracion': (a) => {
+    if (!Array.isArray(a?.rompecabezas)) return a
+    const vistos = new Set()
+    const rompecabezas = a.rompecabezas
+      .filter((r) => r?.oracion && r?.traduccion && Array.isArray(r.piezas_en_orden)
+        && r.piezas_en_orden.length >= 3 && r.piezas_en_orden.length <= 8)
+      .map((r, i) => {
+        const id = r.id && !vistos.has(r.id) ? r.id : `R${i + 1}`
+        vistos.add(id)
+        return { ...r, id }
+      })
+    return rompecabezas.length >= 3 ? { ...a, rompecabezas } : a
+  },
+}
+
+/** Corrige lo que se puede corregir sin IA (ver SANEADORES). */
+export function sanear(codigo, data) {
+  const f = SANEADORES[codigo]
+  return f && data ? f(data) : data
+}
+
 export function validarLote(actividades, codigosEsperados) {
   const validas = {}, fallidas = []
   for (const codigo of codigosEsperados) {
-    const data = actividades?.[codigo]
+    const data = sanear(codigo, actividades?.[codigo])
     const motivo = validarActividad(codigo, data)
     if (motivo) fallidas.push({ codigo, motivo })
     else validas[codigo] = data
