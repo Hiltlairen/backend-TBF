@@ -114,3 +114,42 @@ describe('validación de esquemas (zod) — punto 5', () => {
     expect(res.status).toBe(400)
   })
 })
+
+describe('el admin no puede dejarse afuera a sí mismo', () => {
+  it('ni darse de baja ni cambiarse el rol (409); a otro sí lo puede dar de baja y reactivar', async () => {
+    const tokAdm = await loginComo(app, 'admin')
+    const A = { Authorization: `Bearer ${tokAdm}` }
+    const { usuarios } = (await request(app).get('/api/admin/usuarios').set(A)).body
+    const yo = usuarios.find((u) => u.email === 'admin@englishlessons.edu')
+    const otro = usuarios.find((u) => u.email === 'docente2@englishlessons.edu')
+
+    expect((await request(app).post(`/api/admin/usuarios/${yo.id}/baja`).set(A)).status).toBe(409)
+    expect((await request(app).patch(`/api/admin/usuarios/${yo.id}`).set(A).send({ activo: false })).status).toBe(409)
+    expect((await request(app).patch(`/api/admin/usuarios/${yo.id}`).set(A).send({ rol: 'docente' })).status).toBe(409)
+
+    expect((await request(app).post(`/api/admin/usuarios/${otro.id}/baja`).set(A)).body.usuario.activo).toBe(false)
+    expect((await request(app).patch(`/api/admin/usuarios/${otro.id}`).set(A).send({ activo: true })).body.usuario.activo).toBe(true)
+  })
+})
+
+describe('límites de peticiones en /api/auth', () => {
+  it('navegar no desloguea: muchas llamadas a /yo y logins correctos no se frenan', async () => {
+    const tok = await loginComo(app, 'docente')
+    for (let i = 0; i < 30; i++) {
+      expect((await request(app).get('/api/auth/yo').set('Authorization', `Bearer ${tok}`)).status).toBe(200)
+    }
+    for (let i = 0; i < 25; i++) {
+      expect((await request(app).post('/api/auth/login').send(CREDENCIALES.curador)).status).toBe(200)
+    }
+  })
+
+  it('los intentos fallidos sí se frenan (429 tras 20)', async () => {
+    const malos = []
+    for (let i = 0; i < 22; i++) {
+      malos.push((await request(app).post('/api/auth/login').send({ email: 'nadie@x.edu', password: 'mala-clave' })).status)
+    }
+    // (otros tests de este archivo ya sumaron algún intento fallido)
+    expect(malos[0]).toBe(401)
+    expect(malos.at(-1)).toBe(429)
+  })
+})

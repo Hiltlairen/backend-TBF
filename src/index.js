@@ -73,14 +73,32 @@ const limiteGeneracion = rateLimit({
   windowMs: 60_000, max: 12,
   message: { error: 'Demasiadas generaciones seguidas. Espera un minuto.' },
 })
-// Freno para el login (fuerza bruta)
-const limiteLogin = rateLimit({ windowMs: 60_000, max: 20 })
+// Freno para el login (fuerza bruta): cuenta solo los intentos FALLIDOS.
+// Antes frenaba TODO /api/auth (también /yo, que el panel llama en cada
+// carga) a 20 por minuto por IP: un docente navegando rápido quedaba
+// deslogueado, y en un colegio —todos salen por la misma IP— una clase
+// entera no podía entrar a la sala a la vez.
+const limiteLogin = rateLimit({
+  windowMs: 15 * 60_000, max: 20, skipSuccessfulRequests: true,
+  message: { error: 'Demasiados intentos fallidos. Espera unos minutos y vuelve a intentar.' },
+  standardHeaders: true, legacyHeaders: false,
+})
+// Entrada de estudiantes con código de sala: holgado a propósito, una
+// clase completa entra en el mismo minuto y desde la misma IP. Frena
+// solo a quien prueba códigos a ciegas.
+const limiteInvitado = rateLimit({
+  windowMs: 60_000, max: 200,
+  message: { error: 'Demasiados intentos. Espera un minuto.' },
+  standardHeaders: true, legacyHeaders: false,
+})
 
 app.get('/api/salud', (_req, res) => res.json({
   ok: true, entorno: config.entorno, gemini: tieneGemini(), modelo: config.geminiModel,
 }))
 
-app.use('/api/auth', limiteLogin, authRoutes)
+app.use('/api/auth/login', limiteLogin)
+app.use('/api/auth/invitado', limiteInvitado)
+app.use('/api/auth', authRoutes)
 app.use('/api/library', libraryRoutes)
 app.use('/api/activities', (req, res, next) =>
   req.method === 'POST' && req.path.startsWith('/generar') ? limiteGeneracion(req, res, next) : next(),

@@ -32,6 +32,7 @@
 // ============================================================
 import { Router } from 'express'
 import PDFDocument from 'pdfkit'
+import { config } from '../config.js'
 import { listar, buscar, insertar, actualizar, libros as listarLibros } from '../db/store.js'
 import { requiereAuth, requiereRol } from '../middleware/auth.js'
 import { cifrar, descifrar } from '../services/crypto.js'
@@ -55,6 +56,18 @@ function generarCodigoMatricula() {
   return codigo
 }
 
+/**
+ * Código externo AUTOMÁTICO: año + número correlativo dentro de la
+ * clase ("2026-0001", "2026-0002"…). Ya no se escribe a mano. El
+ * correlativo cuenta a TODOS los estudiantes que tuvo la clase (también
+ * los dados de baja o purgados), así un número nunca se reutiliza.
+ * El navegador muestra el mismo cálculo como vista previa
+ * (pages/Clases.jsx → codigoExternoPrevisto).
+ */
+export function codigoExterno(anio, numero) {
+  return `${anio}-${String(numero).padStart(4, '0')}`
+}
+
 function nombreDocente(id) {
   return buscar('usuarios', (u) => u.id === id)?.nombre ?? null
 }
@@ -74,8 +87,12 @@ function publicaClase(c) {
     docenteNombre: c.docente_id ? nombreDocente(c.docente_id) : null,
     libroNombre: c.book_id ? nombreLibro(c.book_id) : null,
     totalEstudiantes: total,
+    // Días que quedan para poder reactivarla (null si no está finalizada).
+    diasParaReactivar: c.finalizada_en ? Math.max(0, config.retencionDias - diasDesde(c.finalizada_en)) : null,
   }
 }
+
+const diasDesde = (iso) => Math.floor((Date.now() - new Date(iso).getTime()) / 86_400_000)
 
 /** Descifra el nombre y agrega el estado de retención/purga para la UI.
  *  Nunca devuelve el valor cifrado crudo. */
@@ -103,31 +120,26 @@ function csv(filas) {
 // lo que ya "aprobó" el navegador.
 function normalizarFila(f) {
   const nombre = String(f?.nombre ?? '').trim().replace(/\s+/g, ' ')
-  const codigoExternoBruto = String(f?.codigoExterno ?? '').trim()
-  return {
-    nombre: nombre.slice(0, 120),
-    codigoExterno: codigoExternoBruto ? codigoExternoBruto.slice(0, 60) : null,
-  }
+  // El código externo ya no viene del navegador: lo asigna validarLote().
+  return { nombre: nombre.slice(0, 120) }
 }
 
 /** Valida un lote contra sí mismo y contra el roster ya existente de
  *  la clase. Devuelve cada fila anotada con `issues` (array de
  *  códigos) y `valido`, más un resumen. No toca la base de datos. */
 function validarLote(filasCrudas, clase) {
-  const existentes = listar('estudiantes', (e) => e.clase_id === clase.id && !e.purgado_en)
+  const todos = listar('estudiantes', (e) => e.clase_id === clase.id)
+  const existentes = todos.filter((e) => !e.purgado_en)
   const nombresExistentes = new Set(existentes.map((e) => descifrar(e.nombre).trim().toLowerCase()))
-  const codigosExistentes = new Set(
-    existentes.map((e) => e.codigo_externo).filter(Boolean).map((c) => c.toLowerCase())
-  )
 
   const nombresVistos = new Set()
-  const codigosVistos = new Set()
+  const anio = new Date().getFullYear()
+  let siguiente = todos.length + 1   // correlativo del código externo (ver codigoExterno)
 
   const filas = filasCrudas.map((cruda) => {
     const fila = normalizarFila(cruda)
     const issues = []
     const claveNombre = fila.nombre.toLowerCase()
-    const claveCodigo = fila.codigoExterno?.toLowerCase()
 
     if (!fila.nombre) {
       issues.push('nombre_faltante')
@@ -137,13 +149,8 @@ function validarLote(filasCrudas, clase) {
       nombresVistos.add(claveNombre)
     }
 
-    if (claveCodigo) {
-      if (codigosVistos.has(claveCodigo)) issues.push('codigo_duplicado_en_lote')
-      if (codigosExistentes.has(claveCodigo)) issues.push('codigo_ya_en_clase')
-      codigosVistos.add(claveCodigo)
-    }
-
-    return { ...fila, issues, valido: issues.length === 0 }
+    const codigo = fila.nombre ? codigoExterno(anio, siguiente++) : null
+    return { ...fila, codigoExterno: codigo, issues, valido: issues.length === 0 }
   })
 
   const advertencias = []
@@ -197,7 +204,8 @@ r.post('/', ...gestion, validar(crearClaseSchema), (req, res) => {
 
   const clase = insertar('clases', {
     nombre: nombre.trim(),
-    periodo: periodo?.trim() || null,
+    // Ya no se escribe: es el año en curso (se puede corregir con PATCH).
+    periodo: periodo?.trim() || String(new Date().getFullYear()),
     book_id: bookId ? Number(bookId) : null,
     docente_id,
     creado_por: req.usuario.id,
@@ -253,6 +261,40 @@ r.post('/:id/finalizar', ...gestion, (req, res) => {
   res.json({
     clase: publicaClase(clase),
     mensaje: `Clase finalizada. ${activos.length} estudiante(s) entraron a la ventana de retención.`,
+  })
+})
+
+// ── POST /api/clases/:id/reactivar — deshace "Finalizar" ─────
+// Solo dentro de la ventana de retención (DATA_RETENTION_DAYS, 30 días
+// por defecto): pasado ese plazo la purga ya pudo haber anonimizado a
+// los estudiantes y no hay vuelta atrás. Reactiva a los estudiantes que
+// salieron por el cierre (mismo retiro_en que la clase), no a los que
+// ya se habían dado de baja antes ni a los purgados.
+r.post('/:id/reactivar', ...gestion, (req, res) => {
+  const c = buscar('clases', (x) => x.id === req.params.id)
+  if (!c) return res.status(404).json({ error: 'Clase no encontrada.' })
+  if (!c.finalizada_en) return res.status(409).json({ error: 'Esa clase no está finalizada.' })
+
+  const dias = diasDesde(c.finalizada_en)
+  if (dias > config.retencionDias) {
+    return res.status(409).json({
+      error: `Ya pasaron ${dias} días desde que se finalizó (el límite es ${config.retencionDias}): no se puede reactivar.`,
+    })
+  }
+
+  const cerrados = listar('estudiantes', (e) =>
+    e.clase_id === c.id && !e.activo && !e.purgado_en && e.retiro_en === c.finalizada_en)
+  for (const e of cerrados) actualizar('estudiantes', e.id, { activo: true, retiro_en: null })
+
+  const clase = actualizar('clases', c.id, { activa: true, finalizada_en: null })
+  insertar('auditoria', {
+    tipo: 'purga', accion: 'reactivar_clase', clase_id: c.id,
+    estudiantes_reactivados: cerrados.length,
+    por: req.usuario.id, por_nombre: req.usuario.nombre,
+  })
+  res.json({
+    clase: publicaClase(clase),
+    mensaje: `Clase reactivada. ${cerrados.length} estudiante(s) vuelven a estar activos.`,
   })
 })
 
@@ -467,6 +509,96 @@ r.get('/:id/progreso', requiereAuth, requiereRol('admin', 'docente'), (req, res)
     .sort((a, b) => (a.promedio ?? 0) - (b.promedio ?? 0))
 
   res.json({ clase: publicaClase(c), estudiantes })
+})
+
+// ── Gestión de cursos: planilla de notas de una clase ───────────
+// Estudiantes (filas) × actividades lanzadas para ESTA clase (columnas,
+// en orden cronológico) con la nota de cada uno, y la nota final hasta
+// ese momento. La misma planilla alimenta la pantalla y el CSV.
+//   · Si un estudiante jugó la misma sala más de una vez, vale la última
+//     entrega.
+//   · Nota final = promedio de las actividades que entregó (las que no
+//     hizo no cuentan como 0; se informa cuántas entregó de cuántas).
+//   · Nombres: mismas reglas que el resto del panel (purgado → aviso).
+function planillaDeNotas(c) {
+  const salas = listar('salas', (s) => s.clase_id === c.id)
+    .slice().sort((a, b) => new Date(a.creado_en) - new Date(b.creado_en))
+  const actividades = salas.map((s) => ({
+    salaId: s.id, titulo: s.titulo, modo: s.modo, codigo: s.codigo, fecha: s.creado_en,
+  }))
+  const idsSala = new Set(salas.map((s) => s.id))
+
+  // Última entrega de cada estudiante en cada sala
+  const ultima = new Map() // `${estudianteId}|${salaId}` → resultado
+  for (const r of listar('resultados', (x) => idsSala.has(x.sala_id) && x.estudiante_id)) {
+    const k = `${r.estudiante_id}|${r.sala_id}`
+    const previa = ultima.get(k)
+    if (!previa || new Date(r.creado_en) > new Date(previa.creado_en)) ultima.set(k, r)
+  }
+
+  const estudiantes = listar('estudiantes', (e) => e.clase_id === c.id)
+    .map((e) => {
+      const notas = {}
+      for (const a of actividades) {
+        const r = ultima.get(`${e.id}|${a.salaId}`)
+        notas[a.salaId] = r ? (r.requiere_revision ? null : r.puntaje ?? 0) : null
+      }
+      const entregadas = actividades.filter((a) => ultima.has(`${e.id}|${a.salaId}`))
+      const conNota = Object.values(notas).filter((n) => n != null)
+      return {
+        id: e.id,
+        nombre: e.purgado_en ? 'Estudiante retirado (dato purgado)' : descifrar(e.nombre),
+        codigoExterno: e.purgado_en ? null : (e.codigo_externo ?? null),
+        activo: Boolean(e.activo),
+        purgado: Boolean(e.purgado_en),
+        notas,
+        // Entregas que esperan la corrección del docente (redacción)
+        pendientes: entregadas.filter((a) => ultima.get(`${e.id}|${a.salaId}`).requiere_revision).map((a) => a.salaId),
+        entregadas: entregadas.length,
+        notaFinal: conNota.length ? Math.round(conNota.reduce((x, y) => x + y, 0) / conNota.length) : null,
+      }
+    })
+    .sort((a, b) => (a.purgado - b.purgado) || a.nombre.localeCompare(b.nombre, 'es'))
+
+  return { actividades, estudiantes }
+}
+
+// ── GET /api/clases/:id/notas — planilla para "Gestión de cursos" ──
+r.get('/:id/notas', requiereAuth, requiereRol('admin', 'docente'), (req, res) => {
+  const c = buscar('clases', (x) => x.id === req.params.id)
+  if (!c) return res.status(404).json({ error: 'Clase no encontrada.' })
+  if (!puedeVer(c, req.usuario)) return res.status(403).json({ error: 'Esa clase no te fue asignada.' })
+  res.json({ clase: publicaClase(c), ...planillaDeNotas(c) })
+})
+
+// ── GET /api/clases/:id/notas.csv — la planilla para Excel ─────────
+// Nombre, código externo, una columna por actividad (cronológica) con
+// su nota, y la nota final hasta hoy.
+r.get('/:id/notas.csv', requiereAuth, requiereRol('admin', 'docente'), (req, res) => {
+  const c = buscar('clases', (x) => x.id === req.params.id)
+  if (!c) return res.status(404).json({ error: 'Clase no encontrada.' })
+  if (!puedeVer(c, req.usuario)) return res.status(403).json({ error: 'Esa clase no te fue asignada.' })
+
+  const { actividades, estudiantes } = planillaDeNotas(c)
+  const fecha = (iso) => new Date(iso).toLocaleDateString('es-BO', { day: '2-digit', month: '2-digit' })
+  const filas = [[
+    'Estudiante', 'Código externo',
+    ...actividades.map((a) => `${fecha(a.fecha)} · ${a.titulo}`),
+    'Actividades entregadas', 'Nota final',
+  ]]
+  for (const e of estudiantes) {
+    filas.push([
+      e.nombre, e.codigoExterno ?? '',
+      ...actividades.map((a) => (e.pendientes.includes(a.salaId) ? 'por corregir' : (e.notas[a.salaId] ?? ''))),
+      `${e.entregadas}/${actividades.length}`,
+      e.notaFinal ?? '',
+    ])
+  }
+
+  const nombreArchivo = `notas-${(c.nombre || 'curso').replace(/[^a-z0-9]+/gi, '-').toLowerCase()}.csv`
+  res.setHeader('Content-Type', 'text/csv; charset=utf-8')
+  res.setHeader('Content-Disposition', `attachment; filename="${nombreArchivo}"`)
+  res.send('﻿' + csv(filas)) // BOM para que Excel detecte UTF-8
 })
 
 // ── GET /api/clases/:id/actividades/:salaId/resultados — resultados de

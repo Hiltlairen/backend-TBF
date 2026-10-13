@@ -95,7 +95,7 @@ export const config = {
               .split(',').map((s) => s.trim()).filter(Boolean),
 
   // ── Datos ──
-  dataDir: process.env.DATA_DIR ?? path.join(raiz, 'data'),
+  dataDir: process.env.DATA_DIR || path.join(raiz, 'data'),
 
   // ── Base de datos (Postgres / Supabase) ──
   // Si DATABASE_URL está definida, el store persiste en Postgres y
@@ -123,7 +123,9 @@ export const config = {
   // JSON (y del dump de Postgres, si hay DATABASE_URL). No es la
   // misma carpeta que dataDir: nunca conviene mezclar el dato vivo
   // con sus respaldos.
-  backupDir: process.env.BACKUP_DIR ?? path.join(raiz, 'backups'),
+  // `||` y no `??`: un BACKUP_DIR= vacío en el .env escribía los backups
+  // en la raíz de server/ (y terminaban subidos a GitHub).
+  backupDir: process.env.BACKUP_DIR || path.join(raiz, 'backups'),
   // Cada cuántas horas corre el backup automático.
   backupIntervaloHoras: Number(process.env.BACKUP_INTERVAL_HOURS ?? 24),
   // Cuántos backups recientes conservar (se podan los más viejos).

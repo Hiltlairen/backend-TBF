@@ -61,6 +61,11 @@ r.patch('/usuarios/:id', ...soloAdmin, validar(editarUsuarioSchema), (req, res) 
   const u = buscar('usuarios', (x) => x.id === req.params.id)
   if (!u) return res.status(404).json({ error: 'Usuario no encontrado.' })
   const { nombre, rol, activo, password } = req.body
+  // Nadie se da de baja ni se quita el rol de admin a sí mismo: se
+  // quedaría fuera del panel sin que nadie lo haya decidido.
+  if (u.id === req.usuario.id && (activo === false || (rol !== undefined && rol !== u.rol))) {
+    return res.status(409).json({ error: 'No puedes darte de baja ni cambiar tu propio rol.' })
+  }
   const parche = {}
   if (nombre !== undefined) parche.nombre = nombre
   if (rol !== undefined) parche.rol = rol

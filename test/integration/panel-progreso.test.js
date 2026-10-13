@@ -146,3 +146,31 @@ describe('progreso longitudinal de un estudiante en su clase', () => {
     expect(res.status).toBe(403)
   })
 })
+
+describe('gestión de cursos: planilla de notas de la clase', () => {
+  it('estudiantes × actividades en orden cronológico, con la nota final', async () => {
+    const res = await request(app).get(`/api/clases/${claseId}/notas`).set('Authorization', `Bearer ${tokDoc}`)
+    expect(res.status).toBe(200)
+    expect(res.body.actividades).toHaveLength(2)
+    const [est] = res.body.estudiantes
+    expect(est.nombre).toBe('Estudiante Progreso')
+    expect(res.body.actividades.map((a) => est.notas[a.salaId])).toEqual([60, 90])
+    expect(est).toMatchObject({ entregadas: 2, notaFinal: 75 })
+  })
+
+  it('el CSV trae una columna por actividad y la nota final', async () => {
+    const res = await request(app).get(`/api/clases/${claseId}/notas.csv`).set('Authorization', `Bearer ${tokDoc}`)
+    expect(res.status).toBe(200)
+    expect(res.headers['content-type']).toMatch(/text\/csv/)
+    const [cabecera, fila] = res.text.replace(/^\ufeff/, '').split('\r\n')
+    expect(cabecera.split(',')).toHaveLength(2 + 2 + 2) // nombre, código, 2 actividades, entregadas, final
+    expect(cabecera).toMatch(/Nota final$/)
+    expect(fila).toMatch(/^Estudiante Progreso,\d{4}-0001,60,90,2\/2,75$/)
+  })
+
+  it('un docente sin la clase asignada no la ve (403)', async () => {
+    const otro = await request(app).post('/api/auth/login').send({ email: 'docente2@englishlessons.edu', password: 'Docente*2026' })
+    const res = await request(app).get(`/api/clases/${claseId}/notas`).set('Authorization', `Bearer ${otro.body.token}`)
+    expect(res.status).toBe(403)
+  })
+})

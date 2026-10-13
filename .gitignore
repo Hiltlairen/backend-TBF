@@ -8,3 +8,5 @@ dist
 data/
 data-e2e/
 backups/
+# Backups viejos que quedaron en la raíz (BACKUP_DIR vacío)
+20[0-9][0-9]-*T*Z/
