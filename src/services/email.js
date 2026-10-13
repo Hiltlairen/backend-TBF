@@ -55,7 +55,12 @@ function enviarPorConsola({ to, subject, html, texto }) {
  * debe tumbar la petición HTTP que lo disparó); quien llama puede
  * revisar el valor de retorno si necesita saberlo.
  */
+// Solo en tests: los correos "enviados" quedan acá para leerlos (por
+// ejemplo, el código de inicio de sesión).
+export const bandejaDePrueba = []
+
 export async function enviarCorreo({ to, subject, html, texto }) {
+  if (config.entorno === 'test') { bandejaDePrueba.push({ to, subject, html }); return true }
   try {
     if (config.emailProveedor === 'resend' && config.resendApiKey) {
       await enviarConResend({ to, subject, html, texto })
@@ -97,6 +102,20 @@ export function enviarVerificacionCuenta({ email, nombre, token, esReenvio = fal
       confirma tu correo y elige tu contraseña:</p>
       ${boton(href, 'Activar mi cuenta')}
       <p>Este enlace vale por ${config.tokenTtlMin} minutos y solo se puede usar una vez.</p>
+    `),
+  })
+}
+
+export function enviarCodigoLogin({ email, nombre, codigo, minutos }) {
+  return enviarCorreo({
+    to: email,
+    subject: `${codigo} es tu código para entrar — English Lessons`,
+    html: envoltorio('Tu código para entrar', `
+      <p>Hola ${nombre},</p>
+      <p>Para terminar de iniciar sesión, escribe este código:</p>
+      <p style="font-size:32px;font-weight:800;letter-spacing:8px;margin:20px 0;color:#142843">${codigo}</p>
+      <p>Vale por ${minutos} minutos y solo sirve una vez.</p>
+      <p>Si <strong>no</strong> intentaste entrar, alguien conoce tu contraseña: cámbiala y avisa a tu administrador.</p>
     `),
   })
 }

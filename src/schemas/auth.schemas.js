@@ -1,9 +1,22 @@
 import { z } from 'zod'
 import { email as emailSchema, passwordNueva } from './comunes.js'
 
+// `captcha`: token de Cloudflare Turnstile (se valida en services/captcha.js).
+const captcha = z.string().max(4096).optional()
+
 export const loginSchema = z.object({
   email: z.string().trim().min(1, 'El correo es obligatorio.'),
   password: z.string().min(1, 'La contraseña es obligatoria.'),
+  captcha,
+})
+
+export const codigoLoginSchema = z.object({
+  desafio: z.string().min(1, 'Falta el desafío.').max(200),
+  codigo: z.string().trim().regex(/^\d{6}$/, 'El código tiene 6 dígitos.'),
+})
+
+export const reenviarCodigoSchema = z.object({
+  desafio: z.string().min(1, 'Falta el desafío.').max(200),
 })
 
 // codigoMatricula/nombre: cuál de los dos hace falta depende de si la
@@ -39,6 +52,7 @@ export const cambiarPasswordSchema = z.object({
 export const verificarCuentaSchema = z.object({
   token: z.string().min(1, 'Falta el token.'),
   password: passwordNueva.optional(),
+  captcha,
 })
 
 export const emailOpcionalSchema = z.object({

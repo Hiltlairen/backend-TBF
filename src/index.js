@@ -137,6 +137,14 @@ function verificarProduccion() {
   if (faltan.length) {
     throw new Error(`Configuración de producción incompleta. Define: ${faltan.join(', ')}.`)
   }
+  // No impiden arrancar, pero conviene saberlo:
+  if (!config.turnstileSecret) {
+    logger.warn('TURNSTILE_SECRET_KEY no está definida: el login y la activación de cuentas NO piden captcha.')
+  }
+  if (config.loginCodigoEmail && !(config.emailProveedor === 'resend' && config.resendApiKey)) {
+    logger.warn('LOGIN_CODIGO_EMAIL está activo pero el correo está en modo consola: los códigos para entrar '
+      + 'solo aparecen en este log. Configura EMAIL_PROVIDER=resend + RESEND_API_KEY.')
+  }
 }
 
 export async function arrancar({ escuchar = true } = {}) {

@@ -10,15 +10,20 @@ import { registrarSesion } from '../db/pg.js'
 import { ROLES } from '../db/seed.js'
 import { descifrar } from '../services/crypto.js'
 import { VERSION_ACTUAL, TEXTO_ACTUAL, avisoPendiente } from '../domain/avisoPrivacidad.js'
-import { crearToken, consumirToken } from '../services/tokens.js'
+import {
+  crearToken, consumirToken, crearCodigoLogin, verificarCodigoLogin, reenviarCodigoLogin, CODIGO_TTL_MIN,
+} from '../services/tokens.js'
 import {
   enviarVerificacionCuenta, enviarResetPassword, enviarAvisoCambioPassword,
-  enviarConfirmacionCambioEmail, enviarAvisoCambioEmail,
+  enviarConfirmacionCambioEmail, enviarAvisoCambioEmail, enviarCodigoLogin,
 } from '../services/email.js'
+import { config } from '../config.js'
+import { exigirCaptcha } from '../services/captcha.js'
 import { validar } from '../middleware/validar.js'
 import {
   loginSchema, invitadoSchema, actualizarPerfilSchema, cambiarPasswordSchema,
   verificarCuentaSchema, emailOpcionalSchema, resetPasswordSchema, tokenSchema,
+  codigoLoginSchema, reenviarCodigoSchema,
 } from '../schemas/auth.schemas.js'
 
 const r = Router()
@@ -37,8 +42,30 @@ const RESPUESTA_GENERICA = {
   mensaje: 'Si ese correo existe en el sistema, te mandamos instrucciones.',
 }
 
+/** Sesión iniciada: token + datos públicos del usuario. */
+function abrirSesion(res, u) {
+  actualizar('usuarios', u.id, { ultimo_acceso: new Date().toISOString() })
+  registrarSesion({ usuario_id: u.id, email: u.email })   // bitácora de login en Postgres (si hay BD)
+  res.json({
+    token: firmarToken(u),
+    usuario: { id: u.id, email: u.email, nombre: u.nombre, rol: u.rol, rolNombre: ROLES[u.rol]?.nombre, avatar: u.avatar ?? null },
+  })
+}
+
+/** "juan.perez@gmail.com" → "ju•••••••@gmail.com", para decir a dónde se mandó el código. */
+function enmascarar(email) {
+  const [usuario, dominio] = String(email).split('@')
+  return `${usuario.slice(0, 2)}${'•'.repeat(Math.max(3, usuario.length - 2))}@${dominio}`
+}
+
 // ── POST /api/auth/login  (admin | curador | docente) ──────
-r.post('/login', validar(loginSchema), async (req, res) => {
+// 1) Captcha ("No soy un robot") y contraseña.
+// 2) Si LOGIN_CODIGO_EMAIL está activo (por defecto), NO se entrega la
+//    sesión todavía: se manda un código de 6 dígitos al correo y se
+//    responde { requiereCodigo, desafio }. La sesión sale de
+//    POST /login/verificar con ese desafío + el código.
+// Todo /login/* pasa por el límite de intentos FALLIDOS (index.js).
+r.post('/login', validar(loginSchema), exigirCaptcha(), async (req, res) => {
   const { email, password } = req.body
   const u = buscar('usuarios', (x) => x.email === String(email).toLowerCase())
   // Mensaje genérico a propósito: no revelamos si el email existe, si
@@ -50,12 +77,39 @@ r.post('/login', validar(loginSchema), async (req, res) => {
     return res.status(401).json({ error: 'Credenciales incorrectas.' })
   }
 
-  actualizar('usuarios', u.id, { ultimo_acceso: new Date().toISOString() })
-  registrarSesion({ usuario_id: u.id, email: u.email })   // bitácora de login en Postgres (si hay BD)
-  res.json({
-    token: firmarToken(u),
-    usuario: { id: u.id, email: u.email, nombre: u.nombre, rol: u.rol, rolNombre: ROLES[u.rol]?.nombre, avatar: u.avatar ?? null },
-  })
+  if (!config.loginCodigoEmail) return abrirSesion(res, u)
+
+  const { desafio, codigo } = crearCodigoLogin(u.id)
+  enviarCodigoLogin({ email: u.email, nombre: u.nombre, codigo, minutos: CODIGO_TTL_MIN })
+  res.json({ requiereCodigo: true, desafio, enviadoA: enmascarar(u.email), minutos: CODIGO_TTL_MIN })
+})
+
+// ── POST /api/auth/login/verificar — Body: { desafio, codigo } ──
+r.post('/login/verificar', validar(codigoLoginSchema), (req, res) => {
+  const r_ = verificarCodigoLogin(req.body.desafio, req.body.codigo)
+  if (!r_.ok) {
+    const mensajes = {
+      invalido: 'El código venció o ya se usó. Vuelve a iniciar sesión.',
+      agotado: 'Demasiados intentos con ese código. Vuelve a iniciar sesión para recibir otro.',
+      incorrecto: `Código incorrecto. Te quedan ${r_.restantes} intento(s).`,
+    }
+    return res.status(401).json({ error: mensajes[r_.motivo], motivo: r_.motivo })
+  }
+  const u = buscar('usuarios', (x) => x.id === r_.usuarioId)
+  // La cuenta pudo darse de baja entre la contraseña y el código.
+  if (!u || !u.activo) return res.status(401).json({ error: 'Credenciales incorrectas.' })
+  abrirSesion(res, u)
+})
+
+// ── POST /api/auth/login/reenviar — Body: { desafio } ───────
+r.post('/login/reenviar', limiteSensible, validar(reenviarCodigoSchema), (req, res) => {
+  const nuevo = reenviarCodigoLogin(req.body.desafio)
+  if (!nuevo) {
+    return res.status(400).json({ error: 'No se puede reenviar el código. Vuelve a iniciar sesión.' })
+  }
+  const u = buscar('usuarios', (x) => x.id === nuevo.usuarioId)
+  if (u) enviarCodigoLogin({ email: u.email, nombre: u.nombre, codigo: nuevo.codigo, minutos: CODIGO_TTL_MIN })
+  res.json({ ok: true, minutos: CODIGO_TTL_MIN })
 })
 
 // ── POST /api/auth/invitado  (estudiante SIN cuenta) ───────
@@ -244,7 +298,7 @@ r.get('/roles', (_req, res) => res.json({ roles: ROLES }))
 // Confirma el correo Y fija la contraseña por primera vez (un solo
 // paso). Si el admin ya le había puesto una contraseña a mano desde
 // el panel, `password` es opcional — el enlace solo confirma el correo.
-r.post('/verificar-cuenta', validar(verificarCuentaSchema), (req, res) => {
+r.post('/verificar-cuenta', validar(verificarCuentaSchema), exigirCaptcha(), (req, res) => {
   const { token, password } = req.body
   const t = consumirToken(token, 'verificacion_cuenta')
   if (!t) return res.status(400).json({ error: 'Ese enlace ya no es válido. Pide que te reenvíen la invitación.' })

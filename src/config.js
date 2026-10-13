@@ -171,6 +171,15 @@ export const config = {
   // Base pública del FRONTEND (no del API) — para armar los enlaces
   // que van dentro de los correos (activar cuenta, reset, etc.).
   appUrl: process.env.APP_URL ?? 'http://localhost:5173',
+  // ── Seguridad del inicio de sesión ──
+  // Segundo factor: tras la contraseña se manda un código de 6 dígitos
+  // al correo de la cuenta. Necesita correo REAL (EMAIL_PROVIDER=resend):
+  // en modo 'consola' el código solo aparece en el log del servidor.
+  loginCodigoEmail: (process.env.LOGIN_CODIGO_EMAIL ?? 'true') === 'true',
+  // Captcha (Cloudflare Turnstile) en el login y al activar la cuenta.
+  // Sin la clave secreta, el captcha queda desactivado (ver services/captcha.js).
+  turnstileSecret: process.env.TURNSTILE_SECRET_KEY ?? '',
+
   // Vida de los tokens de un solo uso (verificación, reset, cambio de email).
   tokenTtlMin: Number(process.env.AUTH_TOKEN_TTL_MIN ?? 20),
 }

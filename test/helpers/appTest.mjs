@@ -43,6 +43,10 @@ export async function crearAppDePrueba({ conGemini = true } = {}) {
   // Los tests usan Gemini simulado (helpers/geminiMock.mjs): que una
   // DEEPSEEK_API_KEY del .env no haga llamadas reales.
   process.env.DEEPSEEK_API_KEY = ''
+  // Sin captcha ni código por correo: los tests de siempre entran con
+  // email + contraseña (el login en 2 pasos se prueba en login-2fa.test.js).
+  process.env.LOGIN_CODIGO_EMAIL = 'false'
+  process.env.TURNSTILE_SECRET_KEY = ''
   // Sin pausa entre llamadas: Gemini es un mock en los tests (la pausa
   // real se prueba aparte, en test/unit/gemini-espaciado.test.js).
   process.env.GEMINI_ESPERA_MIN_MS = '0'
