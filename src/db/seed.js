@@ -50,9 +50,32 @@ export const USUARIOS_SEMILLA = [
   },
 ]
 
-export function sembrar() {
+/**
+ * Usuarios iniciales, solo si la colección está vacía:
+ *   · demo=true  → las 5 cuentas demo de arriba (desarrollo).
+ *   · demo=false → un único admin con `admin` ({email, password, nombre},
+ *     de ADMIN_EMAIL / ADMIN_PASSWORD en producción). Sin esos datos no
+ *     se crea nadie y se avisa.
+ */
+export function sembrar({ demo = true, admin = null } = {}) {
   const existentes = listar('usuarios')
   if (existentes.length > 0) return { creados: 0, total: existentes.length }
+
+  if (!demo) {
+    if (!admin?.email || !admin?.password) {
+      console.warn('  ⚠️  No hay usuarios y no se definieron ADMIN_EMAIL / ADMIN_PASSWORD: nadie podrá entrar al panel.')
+      return { creados: 0, total: 0 }
+    }
+    insertar('usuarios', {
+      email: admin.email.trim().toLowerCase(),
+      nombre: admin.nombre || 'Administración',
+      rol: 'admin',
+      password_hash: bcrypt.hashSync(admin.password, 10),
+      activo: true,
+      email_verificado: true,
+    })
+    return { creados: 1, total: 1, admin: true }
+  }
 
   let creados = 0
   for (const u of USUARIOS_SEMILLA) {

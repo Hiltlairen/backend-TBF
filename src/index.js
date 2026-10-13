@@ -29,6 +29,23 @@ import { salas, juego } from './routes/rooms.routes.js'
 
 const app = express()
 
+// CORS_ORIGINS acepta URLs exactas y patrones con `*` (ej.
+// https://frontend-*-mi-equipo.vercel.app), porque Vercel crea una URL
+// nueva en cada deploy. El `*` solo cubre UN tramo del nombre (letras,
+// números y guiones, nunca un punto): no deja colar otro dominio.
+const patronesCors = config.origenes.map((o) => {
+  if (!o.includes('*')) return o
+  const escapado = o.replace(/[.+?^${}()|[\]\\]/g, '\\$&').replace(/\*/g, '[a-z0-9-]+')
+  return new RegExp(`^${escapado}$`, 'i')
+})
+export const origenPermitido = (origen, listo) => {
+  if (!origen) return listo(null, true) // curl, health checks, server-to-server
+  listo(null, patronesCors.some((p) => (typeof p === 'string' ? p === origen : p.test(origen))))
+}
+// Detrás del proxy de Render: la IP real del cliente viene en
+// X-Forwarded-For (ver config.trustProxy).
+app.set('trust proxy', config.trustProxy)
+
 // Cabeceras de seguridad (punto 5). Este servidor es una API pura
 // (JSON + descargas CSV/PDF), nunca sirve HTML propio: el CSP por
 // defecto de helmet está pensado para páginas y no aporta acá, así
@@ -43,7 +60,7 @@ app.use(helmet({
   contentSecurityPolicy: false,
   crossOriginResourcePolicy: { policy: 'cross-origin' },
 }))
-app.use(cors({ origin: config.origenes, credentials: true }))
+app.use(cors({ origin: origenPermitido, credentials: true }))
 app.use(express.json({ limit: '2mb' }))
 // Id de correlación (punto 6) — ANTES que morgan, para que quede
 // disponible para el resto de la cadena (incluido el log de acceso,
@@ -85,7 +102,25 @@ export { app }
 // purga activo) pero SIN abrir un puerto real — es lo que usan los
 // tests automatizados (server/test/), que hablan con `app` en
 // memoria vía supertest en vez de por la red.
+/**
+ * En producción no se arranca con secretos de ejemplo: un JWT_SECRET
+ * conocido permite falsificar sesiones de admin, y sin ENCRYPTION_KEY
+ * los nombres de los estudiantes quedan cifrados con una llave que está
+ * publicada en el código (services/crypto.js).
+ */
+function verificarProduccion() {
+  if (config.entorno !== 'production') return
+  const faltan = []
+  if (!process.env.JWT_SECRET || config.jwtSecret.length < 32) faltan.push('JWT_SECRET (mínimo 32 caracteres)')
+  if (!config.encryptionKey) faltan.push('ENCRYPTION_KEY')
+  if (config.origenes.every((o) => o.includes('localhost'))) faltan.push('CORS_ORIGINS (la URL del frontend)')
+  if (faltan.length) {
+    throw new Error(`Configuración de producción incompleta. Define: ${faltan.join(', ')}.`)
+  }
+}
+
 export async function arrancar({ escuchar = true } = {}) {
+  verificarProduccion()
   let dbOk = false
   if (tieneDB()) {
     iniciarPool()
@@ -102,7 +137,7 @@ export async function arrancar({ escuchar = true } = {}) {
 
   // Siembra de usuarios demo (solo si no hay ninguno). Con BD conectada,
   // el write-through los sube también a la tabla usuarios.
-  const { creados } = sembrar()
+  const { creados, admin: adminCreado } = sembrar({ demo: config.semillaDemo, admin: config.adminInicial })
 
   // Job de retención: anonimiza identidades de estudiantes cuya
   // ventana venció (fin de curso / retiro + DATA_RETENTION_DAYS).
@@ -117,7 +152,9 @@ export async function arrancar({ escuchar = true } = {}) {
       console.log(`  Gemini: ${tieneGemini() ? `configurada (${config.geminiModel})` : 'SIN API KEY — revisa el .env'}`)
       console.log(`  Base de datos: ${tieneDB() ? (dbOk ? 'Postgres/Supabase conectado' : 'configurada pero sin conexión (fallback JSON)') : 'JSON local (sin DATABASE_URL)'}`)
       console.log(`  Retención de identidad: ${config.retencionDias} días tras baja/fin de curso`)
-      if (creados) {
+      if (adminCreado) {
+        console.log(`\n  Se creó el admin inicial: ${config.adminInicial.email} (contraseña: la de ADMIN_PASSWORD)`)
+      } else if (creados) {
         console.log(`\n  Se crearon ${creados} usuarios de demo:`)
         for (const u of USUARIOS_SEMILLA) console.log(`    · ${u.rol.padEnd(10)} ${u.email}  ${u.password}`)
       }

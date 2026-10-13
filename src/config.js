@@ -70,6 +70,26 @@ export const config = {
   jwtExpira:      process.env.JWT_EXPIRES_IN ?? '8h',
   jwtExpiraAlumno:process.env.JWT_STUDENT_EXPIRES_IN ?? '3h',
 
+  // ── Despliegue detrás de un proxy (Render, Railway, Fly…) ──
+  // El proxy de la plataforma es quien habla con el navegador: sin esto,
+  // Express ve la IP del proxy para TODOS y los límites por IP (login,
+  // generación) se comparten entre todos los usuarios. 1 = confiar en un
+  // salto de proxy. Por defecto, activo solo en producción.
+  trustProxy: process.env.TRUST_PROXY != null
+    ? (/^\d+$/.test(process.env.TRUST_PROXY) ? Number(process.env.TRUST_PROXY) : process.env.TRUST_PROXY === 'true')
+    : (process.env.NODE_ENV === 'production' ? 1 : false),
+
+  // ── Usuarios iniciales ──
+  // Las cuentas DEMO (contraseñas conocidas, ver db/seed.js) solo se
+  // crean fuera de producción, salvo que se pida con SEED_DEMO=true.
+  // En producción, con la base vacía se crea UN admin con estos datos.
+  semillaDemo: (process.env.SEED_DEMO ?? (process.env.NODE_ENV === 'production' ? 'false' : 'true')) === 'true',
+  adminInicial: {
+    email: process.env.ADMIN_EMAIL ?? '',
+    password: process.env.ADMIN_PASSWORD ?? '',
+    nombre: process.env.ADMIN_NOMBRE ?? 'Administración',
+  },
+
   // ── CORS ──
   origenes: (process.env.CORS_ORIGINS ?? 'http://localhost:5173,http://localhost:4173')
               .split(',').map((s) => s.trim()).filter(Boolean),
