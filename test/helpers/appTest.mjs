@@ -37,6 +37,9 @@ export async function crearAppDePrueba({ conGemini = true } = {}) {
   process.env.DATA_DIR = dataDir
   process.env.BACKUP_DIR = backupDir
   process.env.GEMINI_API_KEY = conGemini ? 'fake-test-key' : ''
+  // Los conteos de llamadas de los tests asumen un solo modelo: que el
+  // .env de quien corre los tests no sume modelos de respaldo.
+  process.env.GEMINI_MODEL_FALLBACK = ''
   process.env.JWT_SECRET = 'secreto-de-prueba-no-usar-en-produccion'
   process.env.JWT_EXPIRES_IN = '1h'
   process.env.JWT_STUDENT_EXPIRES_IN = '1h'

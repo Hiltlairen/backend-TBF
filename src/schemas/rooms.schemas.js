@@ -8,7 +8,6 @@ export const crearSalaSchema = z.object({
   modo: z.enum(['simple', 'juego'], { message: "modo debe ser 'simple' o 'juego'." }),
   actividadId: id.optional(),
   rutaId: id.optional(),
-  curso: z.string().trim().max(120).optional(),
   limiteEstudiantes: z.number().optional(),
   claseId: id.optional(),
 })

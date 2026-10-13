@@ -14,6 +14,15 @@
 import pg from 'pg'
 import { config } from '../config.js'
 
+// node-postgres devuelve bigint (int8) y numeric como TEXTO para no
+// perder precisión. Acá los ids de libros/lecciones/vocabulario son
+// bigint y el código los compara como números (leccionPorId hace
+// `l.id === Number(id)`): con "1" en vez de 1 ninguna lección se
+// encontraba al leer el contenido desde Postgres. Los valores de esta
+// app caben de sobra en un Number.
+pg.types.setTypeParser(20, (v) => (v == null ? v : Number(v)))      // int8 / bigint
+pg.types.setTypeParser(1700, (v) => (v == null ? v : Number(v)))    // numeric (puntajes)
+
 let pool = null
 
 export function iniciarPool() {

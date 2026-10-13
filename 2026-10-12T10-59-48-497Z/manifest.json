@@ -1,0 +1,18 @@
+{
+  "creado_en": "2026-10-12T10:59:48.536Z",
+  "motivo": "automatico",
+  "colecciones_json": [
+    "actividades.json",
+    "cache-lotes.json",
+    "clases.json",
+    "estudiantes.json",
+    "generaciones.json",
+    "partidas.json",
+    "resultados.json",
+    "rutas.json",
+    "salas.json",
+    "tokens_auth.json",
+    "usuarios.json"
+  ],
+  "postgres_dump": null
+}

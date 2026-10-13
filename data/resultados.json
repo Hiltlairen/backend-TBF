@@ -644,5 +644,77 @@
         }
       ]
     }
+  },
+  {
+    "id": "a87fb859-93d7-4ad1-8ef6-48ece965be36",
+    "creado_en": "2026-10-12T15:46:56.846Z",
+    "partida_id": "b5929cbe-d9ed-41ce-aa46-66b6b2def349",
+    "sala_id": "fc06e64f-0d21-4143-bf5c-4ab87ed217cb",
+    "codigo": "21730",
+    "modo": "simple",
+    "estudiante": null,
+    "estudiante_id": "76d0bc33-f326-42cf-97f5-75a5240ed5cc",
+    "actividad_codigo": "04-sopa-letras",
+    "actividad_titulo": "Word search",
+    "variante": 5,
+    "lecciones": [
+      "Let's talk about your abilities"
+    ],
+    "puntaje": 0,
+    "puntaje_maximo": 100,
+    "requiere_revision": false,
+    "detalle": {
+      "encontradas": [],
+      "intentos": [
+        {
+          "pregunta": "Pierna",
+          "esperado": "LEG",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Mano",
+          "esperado": "HAND",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Cadera",
+          "esperado": "HIP",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Dedos (mano)",
+          "esperado": "FINGERS",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Nariz",
+          "esperado": "NOSE",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Oreja",
+          "esperado": "EAR",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Hombro",
+          "esperado": "SHOULDER",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "Boca",
+          "esperado": "MOUTH",
+          "respondio": null,
+          "ok": false
+        }
+      ]
+    }
   }
 ]

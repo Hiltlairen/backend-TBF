@@ -715,5 +715,91 @@
     "puntajeTotal": 33,
     "terminada_en": "2026-10-12T01:26:38.748Z",
     "actualizado_en": "2026-10-12T01:26:38.748Z"
+  },
+  {
+    "id": "6f59dd90-aa24-48d2-86c7-b81c8ab10256",
+    "creado_en": "2026-10-12T15:46:51.919Z",
+    "sala_id": "fc06e64f-0d21-4143-bf5c-4ab87ed217cb",
+    "codigo": "21730",
+    "modo": "simple",
+    "estudiante": null,
+    "estudiante_id": "76d0bc33-f326-42cf-97f5-75a5240ed5cc",
+    "estado": "en_curso",
+    "variante": 5,
+    "historial": [],
+    "puntajeTotal": 0
+  },
+  {
+    "id": "b5929cbe-d9ed-41ce-aa46-66b6b2def349",
+    "creado_en": "2026-10-12T15:46:51.925Z",
+    "sala_id": "fc06e64f-0d21-4143-bf5c-4ab87ed217cb",
+    "codigo": "21730",
+    "modo": "simple",
+    "estudiante": null,
+    "estudiante_id": "76d0bc33-f326-42cf-97f5-75a5240ed5cc",
+    "estado": "terminada",
+    "variante": 5,
+    "historial": [
+      {
+        "actividad": "04-sopa-letras",
+        "puntaje": 0,
+        "detalle": {
+          "encontradas": [],
+          "intentos": [
+            {
+              "pregunta": "Pierna",
+              "esperado": "LEG",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Mano",
+              "esperado": "HAND",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Cadera",
+              "esperado": "HIP",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Dedos (mano)",
+              "esperado": "FINGERS",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Nariz",
+              "esperado": "NOSE",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Oreja",
+              "esperado": "EAR",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Hombro",
+              "esperado": "SHOULDER",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "Boca",
+              "esperado": "MOUTH",
+              "respondio": null,
+              "ok": false
+            }
+          ]
+        }
+      }
+    ],
+    "puntajeTotal": 0,
+    "terminada_en": "2026-10-12T15:46:56.844Z",
+    "actualizado_en": "2026-10-12T15:46:56.844Z"
   }
 ]

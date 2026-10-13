@@ -136,6 +136,17 @@ describe('reparto en la sala: a cada estudiante le toca una variante al azar', (
     codigoSala = sala.body.sala.codigo
   })
 
+  it('el curso de la sala es la clase asignada: no se escribe a mano ni se cambia de clase', async () => {
+    const lanzar = (cuerpo) => request(app).post('/api/rooms').set('Authorization', `Bearer ${tokDoc}`)
+      .send({ modo: 'simple', actividadId: actividad.id, ...cuerpo })
+    const conCurso = await lanzar({ curso: 'Un curso inventado' })
+    expect(conCurso.status).toBe(201)
+    expect(conCurso.body.sala.curso).toBe('3° C - Tarde')
+    expect(conCurso.body.sala.limite_estudiantes).toBe(4)
+    await request(app).post(`/api/rooms/${conCurso.body.sala.codigo}/cerrar`).set('Authorization', `Bearer ${tokDoc}`)
+    expect((await lanzar({ claseId: clase30.claseId })).status).toBe(400)
+  })
+
   it('si un estudiante vuelve a entrar, conserva su variante; 4 estudiantes con 4 variantes no repiten ninguna', async () => {
     // Reconexión ANTES de llenar el cupo (con la sala llena, se cierra).
     const primera = pista(await entrar(clase4.codigos[0]))

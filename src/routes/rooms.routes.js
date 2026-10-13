@@ -83,9 +83,12 @@ function paqueteEscena(ruta, nodoId, contenidos) {
 // ══════════════════════════════════════════════════════════
 
 // POST /api/rooms — crear sala
-// Body: { modo:'simple'|'juego', actividadId?, rutaId?, curso?, limiteEstudiantes? }
+// Body: { modo:'simple'|'juego', actividadId?, rutaId?, limiteEstudiantes? }
+// La sala es SIEMPRE de la clase para la que se generó la actividad: el
+// curso no se escribe, y cada estudiante entra con su doble código
+// (sala + matrícula). Ahí le toca una variante al azar (/api/game/iniciar).
 salas.post('/', requiereAuth, requiereRol('admin', 'docente'), validar(crearSalaSchema), (req, res) => {
-  const { modo, actividadId, rutaId, curso, limiteEstudiantes, claseId } = req.body
+  const { modo, actividadId, rutaId, limiteEstudiantes, claseId } = req.body
 
   let referencia, titulo
   if (modo === 'simple') {
@@ -98,33 +101,31 @@ salas.post('/', requiereAuth, requiereRol('admin', 'docente'), validar(crearSala
     titulo = referencia.titulo
   }
 
-  // Clase (cohorte) opcional: si se indica, la sala pide código de
-  // matrícula en vez de nombre libre. El docente solo puede usar sus
-  // propias clases asignadas; el admin puede usar cualquiera.
-  // Si no se indica, se hereda la clase para la que se generó la
-  // actividad: así la sala pide el código de matrícula de esa clase.
-  let clase = null
-  const claseFinalId = claseId ?? referencia.clase_id ?? null
-  if (claseFinalId) {
-    clase = buscar('clases', (c) => c.id === claseFinalId && c.activa)
-    if (!clase) return res.status(404).json({ error: 'Clase no encontrada.' })
-    if (req.usuario.rol !== 'admin' && clase.docente_id !== req.usuario.id) {
-      return res.status(403).json({ error: 'Esa clase no te fue asignada.' })
-    }
+  // La clase sale de la actividad (las variantes se generaron para SUS
+  // estudiantes). Si el cliente manda otra, se rechaza en vez de lanzar
+  // la actividad a un curso para el que no se preparó.
+  const claseFinalId = referencia.clase_id ?? claseId ?? null
+  if (!claseFinalId) {
+    return res.status(400).json({ error: 'Esta actividad no está vinculada a ninguna clase: genérala de nuevo eligiendo tu clase.' })
+  }
+  if (claseId && referencia.clase_id && claseId !== referencia.clase_id) {
+    return res.status(400).json({ error: 'Esta actividad se generó para otra clase.' })
+  }
+  const clase = buscar('clases', (c) => c.id === claseFinalId && c.activa)
+  if (!clase) return res.status(404).json({ error: 'Clase no encontrada.' })
+  if (req.usuario.rol !== 'admin' && clase.docente_id !== req.usuario.id) {
+    return res.status(403).json({ error: 'Esa clase no te fue asignada.' })
   }
 
-  // El curso viene del formulario; si no, se hereda de la clase o de la actividad/ruta.
-  const cursoFinal = (curso?.trim() || clase?.nombre || referencia.curso || '').trim() || null
+  // El curso ES la clase asignada (ya no se escribe a mano).
+  const cursoFinal = clase.nombre
 
   // Límite de estudiantes que el docente fija (tope duro configurable hasta 30).
   const LIMITE_MAX = 30
   let limite = Number(limiteEstudiantes)
   if (!Number.isFinite(limite) || limite < 1) {
-    // Sin número explícito: si hay clase, el cupo por defecto es su
-    // lista de estudiantes activos; si no, el tope máximo.
-    limite = clase
-      ? (listar('estudiantes', (e) => e.clase_id === clase.id && e.activo).length || LIMITE_MAX)
-      : LIMITE_MAX
+    // Sin número explícito: el cupo es la lista de estudiantes activos de la clase.
+    limite = listar('estudiantes', (e) => e.clase_id === clase.id && e.activo).length || LIMITE_MAX
   }
   limite = Math.min(LIMITE_MAX, Math.max(1, Math.round(limite)))
 
@@ -136,7 +137,7 @@ salas.post('/', requiereAuth, requiereRol('admin', 'docente'), validar(crearSala
     estudiantes: [],            // nombres distintos que ya entraron
     actividad_id: modo === 'simple' ? referencia.id : null,
     ruta_id: modo === 'juego' ? referencia.id : null,
-    clase_id: clase?.id ?? null,
+    clase_id: clase.id,
     docente_id: req.usuario.id,
     docente_nombre: req.usuario.nombre,
     activa: true,

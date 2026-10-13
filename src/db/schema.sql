@@ -257,3 +257,53 @@ alter table public.generaciones add column if not exists clase_id uuid reference
 -- Se guarda en 'vocabulary' igual; esta tabla es opcional para
 -- distinguir el origen. La app usa 'vocabulary' directamente.
 -- ============================================================
+
+-- ============================================================
+-- ALINEACIÓN CON EL CÓDIGO ACTUAL (db/pg.js → MAPEO)
+-- ------------------------------------------------------------
+-- Columnas y tablas que el código escribe y que el esquema original
+-- no tenía, y restricciones que el código contradice a propósito
+-- (cuenta invitada sin contraseña, estudiante purgado sin nombre,
+-- partida de un estudiante de clase sin nombre libre). Sin esto,
+-- cada escritura fallaba y Postgres quedaba vacío. Idempotente: se
+-- puede correr sobre una base que ya tenga el esquema anterior.
+-- ============================================================
+
+-- Usuarios: activación por correo, cambio de email y aviso de privacidad
+alter table public.usuarios alter column password_hash drop not null;     -- la cuenta nace sin contraseña (invitación)
+alter table public.usuarios add column if not exists email_verificado         boolean not null default false;
+alter table public.usuarios add column if not exists email_pendiente          text;
+alter table public.usuarios add column if not exists email_pendiente_en       timestamptz;
+alter table public.usuarios add column if not exists aviso_privacidad_version integer not null default 0;
+alter table public.usuarios add column if not exists aviso_privacidad_en      timestamptz;
+
+-- Tokens de un solo uso (verificar cuenta, restablecer contraseña, cambiar email)
+create table if not exists public.tokens_auth (
+  id           uuid primary key default gen_random_uuid(),
+  usuario_id   uuid references public.usuarios(id) on delete cascade,
+  tipo         text not null,               -- 'verificacion_cuenta' | 'reset_password' | 'cambio_email'
+  token_hash   text not null,               -- sha256: el token en claro nunca se guarda
+  email_nuevo  text,
+  expira_en    timestamptz,
+  usado_en     timestamptz,
+  usado_motivo text,
+  creado_en    timestamptz not null default now()
+);
+create index if not exists idx_tokens_auth_hash on public.tokens_auth(token_hash);
+
+-- Clases: fin de curso (arranca la ventana de retención)
+alter table public.clases add column if not exists finalizada_en timestamptz;
+
+-- Estudiantes: código del instituto, baja y purga (la purga borra nombre y código)
+alter table public.estudiantes add column if not exists codigo_externo text;
+alter table public.estudiantes add column if not exists retiro_en      timestamptz;
+alter table public.estudiantes add column if not exists purgado_en     timestamptz;
+alter table public.estudiantes add column if not exists purgado_motivo text;
+alter table public.estudiantes alter column nombre drop not null;
+alter table public.estudiantes alter column codigo_matricula drop not null;
+
+-- Partidas: con clase, el nombre vive en `estudiantes` (solo va estudiante_id)
+alter table public.partidas alter column estudiante drop not null;
+
+-- Revisiones: entregas de estudiantes con identidad (sin duplicar su nombre)
+alter table public.revisiones add column if not exists enviado_por_estudiante_id uuid references public.estudiantes(id);

@@ -1,0 +1,58 @@
+[
+  {
+    "id": "ef2dc25a-f000-45a7-a44d-8bfaa70f5c32",
+    "creado_en": "2026-10-13T09:06:26.084Z",
+    "email": "admin@englishlessons.edu",
+    "nombre": "Dirección Académica",
+    "rol": "admin",
+    "password_hash": "$2a$10$PXw6WEqNm6kplgXxRrkewO7CBpNtb/2XPnL3HCYuG2vyYUvV2uNJ2",
+    "activo": true,
+    "email_verificado": true,
+    "ultimo_acceso": "2026-10-13T09:06:27.337Z",
+    "actualizado_en": "2026-10-13T09:06:27.337Z"
+  },
+  {
+    "id": "b92c546b-f2e3-4b05-a4e1-4fdfb32a52ec",
+    "creado_en": "2026-10-13T09:06:26.161Z",
+    "email": "curaduria@englishlessons.edu",
+    "nombre": "Mesa de Curaduría",
+    "rol": "curador",
+    "password_hash": "$2a$10$9cwG7rYesTc63UGhC2iowOb1zFFRJppBuoSmE6WBap2V4Z15TYBv.",
+    "activo": true,
+    "email_verificado": true,
+    "ultimo_acceso": "2026-10-13T09:06:27.248Z",
+    "actualizado_en": "2026-10-13T09:06:27.248Z"
+  },
+  {
+    "id": "65bd985f-5a84-454f-9f24-03761a2742c1",
+    "creado_en": "2026-10-13T09:06:26.240Z",
+    "email": "revision2@englishlessons.edu",
+    "nombre": "Ana Quispe (revisora)",
+    "rol": "curador",
+    "password_hash": "$2a$10$WSbR9evBYrkzoHlX47MvHeG7XlnNKcJxien5vwWhpLL4LG3NzL83q",
+    "activo": true,
+    "email_verificado": true
+  },
+  {
+    "id": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "creado_en": "2026-10-13T09:06:26.324Z",
+    "email": "docente@englishlessons.edu",
+    "nombre": "Prof. Laura Mamani",
+    "rol": "docente",
+    "password_hash": "$2a$10$N0/UXebi8FNAPjWVDfZF4eo3FeWQBdqtB4zUixArreU.MWICByUT.",
+    "activo": true,
+    "email_verificado": true,
+    "ultimo_acceso": "2026-10-13T09:06:27.151Z",
+    "actualizado_en": "2026-10-13T09:06:27.151Z"
+  },
+  {
+    "id": "76df9a96-78a8-4eb5-a32d-09f25212a8f1",
+    "creado_en": "2026-10-13T09:06:26.401Z",
+    "email": "docente2@englishlessons.edu",
+    "nombre": "Prof. Diego Rojas",
+    "rol": "docente",
+    "password_hash": "$2a$10$Xcf/Sa3mVhAhyY/CZz6PeO8Du02LsOw4uhndMzFLbGLDbDxguTAlq",
+    "activo": true,
+    "email_verificado": true
+  }
+]

@@ -1,0 +1,949 @@
+[
+  {
+    "id": "3f676789-286a-4178-92f0-9be9ad1a8434",
+    "creado_en": "2026-10-13T09:06:28.649Z",
+    "codigo": "01-emparejar",
+    "nivel": "A1",
+    "modo": "simple",
+    "curso": "3° B - Mañana",
+    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
+    "cantidad": 6,
+    "lecciones_ids": [
+      1,
+      2
+    ],
+    "lecciones_titulos": [
+      {
+        "id": 1,
+        "numero": 1,
+        "titulo": "Welcome to Benjamin Franklin Institute"
+      },
+      {
+        "id": 2,
+        "numero": 2,
+        "titulo": "My family and friends"
+      }
+    ],
+    "leccion_titulo": "L1 · Welcome to Benjamin Franklin Institute + L2 · My family and friends",
+    "titulo": "Match the words",
+    "contenido": {
+      "actividad": {
+        "id": "01-emparejar",
+        "titulo": "Match the words",
+        "instrucciones": "Test instructions.",
+        "nivel": "A2",
+        "leccion": "L1",
+        "tiempo_limite": 120,
+        "puntuacion_maxima": 100,
+        "penalizacion_por_error": 10,
+        "escenario": "biblioteca",
+        "interaccion": "ninguna",
+        "presencia": "ninguna"
+      },
+      "columna_izquierda": {
+        "tipo": "texto",
+        "items": [
+          {
+            "id": "L1",
+            "tipo": "texto",
+            "contenido": "clue 1"
+          },
+          {
+            "id": "L2",
+            "tipo": "texto",
+            "contenido": "clue 2"
+          },
+          {
+            "id": "L3",
+            "tipo": "texto",
+            "contenido": "clue 3"
+          },
+          {
+            "id": "L4",
+            "tipo": "texto",
+            "contenido": "clue 4"
+          }
+        ]
+      },
+      "columna_derecha": {
+        "tipo": "texto",
+        "items": [
+          {
+            "id": "R1",
+            "tipo": "texto",
+            "contenido": "word 1"
+          },
+          {
+            "id": "R2",
+            "tipo": "texto",
+            "contenido": "word 2"
+          },
+          {
+            "id": "R3",
+            "tipo": "texto",
+            "contenido": "word 3"
+          },
+          {
+            "id": "R4",
+            "tipo": "texto",
+            "contenido": "word 4"
+          }
+        ]
+      },
+      "pares_correctos": [
+        {
+          "izquierda": "L1",
+          "derecha": "R3"
+        },
+        {
+          "izquierda": "L2",
+          "derecha": "R1"
+        },
+        {
+          "izquierda": "L3",
+          "derecha": "R4"
+        },
+        {
+          "izquierda": "L4",
+          "derecha": "R2"
+        }
+      ]
+    },
+    "variantes": [
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      },
+      {
+        "actividad": {
+          "id": "01-emparejar",
+          "titulo": "Match the words",
+          "instrucciones": "Test instructions.",
+          "nivel": "A2",
+          "leccion": "L1",
+          "tiempo_limite": 120,
+          "puntuacion_maxima": 100,
+          "penalizacion_por_error": 10,
+          "escenario": "biblioteca",
+          "interaccion": "ninguna",
+          "presencia": "ninguna"
+        },
+        "columna_izquierda": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "L1",
+              "tipo": "texto",
+              "contenido": "clue 1"
+            },
+            {
+              "id": "L2",
+              "tipo": "texto",
+              "contenido": "clue 2"
+            },
+            {
+              "id": "L3",
+              "tipo": "texto",
+              "contenido": "clue 3"
+            },
+            {
+              "id": "L4",
+              "tipo": "texto",
+              "contenido": "clue 4"
+            }
+          ]
+        },
+        "columna_derecha": {
+          "tipo": "texto",
+          "items": [
+            {
+              "id": "R1",
+              "tipo": "texto",
+              "contenido": "word 1"
+            },
+            {
+              "id": "R2",
+              "tipo": "texto",
+              "contenido": "word 2"
+            },
+            {
+              "id": "R3",
+              "tipo": "texto",
+              "contenido": "word 3"
+            },
+            {
+              "id": "R4",
+              "tipo": "texto",
+              "contenido": "word 4"
+            }
+          ]
+        },
+        "pares_correctos": [
+          {
+            "izquierda": "L1",
+            "derecha": "R3"
+          },
+          {
+            "izquierda": "L2",
+            "derecha": "R1"
+          },
+          {
+            "izquierda": "L3",
+            "derecha": "R4"
+          },
+          {
+            "izquierda": "L4",
+            "derecha": "R2"
+          }
+        ]
+      }
+    ],
+    "autor": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "autor_nombre": "Prof. Laura Mamani",
+    "autor_avatar": null,
+    "estado": "aprobada"
+  }
+]

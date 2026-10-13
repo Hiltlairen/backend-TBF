@@ -1,0 +1,557 @@
+[
+  {
+    "id": "f349e206-0f41-4dc7-a4bd-8527f4055443",
+    "creado_en": "2026-10-13T09:06:29.000Z",
+    "partida_id": "45071353-d8c3-4309-bb40-9693d72cda1e",
+    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
+    "codigo": "59219",
+    "modo": "juego",
+    "estudiante": null,
+    "estudiante_id": "e63f05f2-588f-4265-901b-661c785a700b",
+    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
+    "ruta_titulo": "Aventura · L1+L2 · A1",
+    "variante": 10,
+    "lecciones": [
+      "Welcome to Benjamin Franklin Institute",
+      "My family and friends"
+    ],
+    "puntaje": 100,
+    "puntaje_maximo": 100,
+    "requiere_revision": true,
+    "recorrido": [
+      "04-sopa-letras@parque(100)",
+      "12-llamada@casa_llamada(100)",
+      "02-conversacion-completar@cafeteria(100)",
+      "06-diccionario@biblioteca(100)",
+      "04-sopa-letras@parque(100)",
+      "10-canciones@karaoke(100)"
+    ],
+    "historial": [
+      {
+        "nodoId": "e1-estandar",
+        "etapa": 1,
+        "carril": "estandar",
+        "actividad": "04-sopa-letras",
+        "escenario": "parque",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "encontradas": [
+            "BOOK",
+            "TABLE",
+            "CHAIR",
+            "WATER",
+            "HOUSE"
+          ],
+          "intentos": [
+            {
+              "pregunta": "A book",
+              "esperado": "BOOK",
+              "respondio": "BOOK",
+              "ok": true
+            },
+            {
+              "pregunta": "A table",
+              "esperado": "TABLE",
+              "respondio": "TABLE",
+              "ok": true
+            },
+            {
+              "pregunta": "A chair",
+              "esperado": "CHAIR",
+              "respondio": "CHAIR",
+              "ok": true
+            },
+            {
+              "pregunta": "A water",
+              "esperado": "WATER",
+              "respondio": "WATER",
+              "ok": true
+            },
+            {
+              "pregunta": "A house",
+              "esperado": "HOUSE",
+              "respondio": "HOUSE",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.943Z"
+      },
+      {
+        "nodoId": "e2-avanzado",
+        "etapa": 2,
+        "carril": "avanzado",
+        "actividad": "12-llamada",
+        "escenario": "casa_llamada",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "Hi! Are you free today?",
+              "esperado": "Yes, I am free after five.",
+              "respondio": "Yes, I am free after five.",
+              "ok": true
+            },
+            {
+              "pregunta": "Great, where do we meet?",
+              "esperado": "At my house, please.",
+              "respondio": "At my house, please.",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.948Z"
+      },
+      {
+        "nodoId": "e3-avanzado",
+        "etapa": 3,
+        "carril": "avanzado",
+        "actividad": "02-conversacion-completar",
+        "escenario": "cafeteria",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "I live in a _____.",
+              "esperado": "house",
+              "respondio": "house",
+              "ok": true
+            },
+            {
+              "pregunta": "Yes, I love every _____.",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.966Z"
+      },
+      {
+        "nodoId": "e4-avanzado",
+        "etapa": 4,
+        "carril": "avanzado",
+        "actividad": "06-diccionario",
+        "escenario": "biblioteca",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "libro",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            },
+            {
+              "pregunta": "mesa",
+              "esperado": "table",
+              "respondio": "table",
+              "ok": true
+            },
+            {
+              "pregunta": "agua",
+              "esperado": "water",
+              "respondio": "water",
+              "ok": true
+            },
+            {
+              "pregunta": "casa",
+              "esperado": "house",
+              "respondio": "house",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.972Z"
+      },
+      {
+        "nodoId": "e5-avanzado",
+        "etapa": 5,
+        "carril": "avanzado",
+        "actividad": "04-sopa-letras",
+        "escenario": "parque",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "encontradas": [
+            "BOOK",
+            "TABLE",
+            "CHAIR",
+            "WATER",
+            "HOUSE"
+          ],
+          "intentos": [
+            {
+              "pregunta": "A book",
+              "esperado": "BOOK",
+              "respondio": "BOOK",
+              "ok": true
+            },
+            {
+              "pregunta": "A table",
+              "esperado": "TABLE",
+              "respondio": "TABLE",
+              "ok": true
+            },
+            {
+              "pregunta": "A chair",
+              "esperado": "CHAIR",
+              "respondio": "CHAIR",
+              "ok": true
+            },
+            {
+              "pregunta": "A water",
+              "esperado": "WATER",
+              "respondio": "WATER",
+              "ok": true
+            },
+            {
+              "pregunta": "A house",
+              "esperado": "HOUSE",
+              "respondio": "HOUSE",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.980Z"
+      },
+      {
+        "nodoId": "e6-avanzado",
+        "etapa": 6,
+        "carril": "avanzado",
+        "actividad": "10-canciones",
+        "escenario": "karaoke",
+        "puntaje": 100,
+        "resultado": "alto",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "Line 1 needs a _____ here",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            },
+            {
+              "pregunta": "Line 2 needs a _____ here",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            },
+            {
+              "pregunta": "Line 3 needs a _____ here",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            },
+            {
+              "pregunta": "Line 4 needs a _____ here",
+              "esperado": "book",
+              "respondio": "book",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:28.998Z"
+      }
+    ]
+  },
+  {
+    "id": "2731d253-2a07-4814-a39a-4a44e148c0b4",
+    "creado_en": "2026-10-13T09:06:29.170Z",
+    "partida_id": "064fd14c-f3c9-4cc8-8a98-55052c9b5fef",
+    "sala_id": "37757ede-5839-4a27-b61f-647f2d301d0c",
+    "codigo": "59219",
+    "modo": "juego",
+    "estudiante": null,
+    "estudiante_id": "1d5e3688-4e8f-457b-9764-785e5100c028",
+    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
+    "ruta_titulo": "Aventura · L1+L2 · A1",
+    "variante": 1,
+    "lecciones": [
+      "Welcome to Benjamin Franklin Institute",
+      "My family and friends"
+    ],
+    "puntaje": 8,
+    "puntaje_maximo": 100,
+    "requiere_revision": true,
+    "recorrido": [
+      "04-sopa-letras@parque(20)",
+      "06-diccionario@aula(0)",
+      "02-conversacion-completar@cafeteria(0)",
+      "12-llamada@casa_llamada(0)",
+      "01-emparejar@biblioteca(30)",
+      "10-canciones@karaoke(0)"
+    ],
+    "historial": [
+      {
+        "nodoId": "e1-estandar",
+        "etapa": 1,
+        "carril": "estandar",
+        "actividad": "04-sopa-letras",
+        "escenario": "parque",
+        "puntaje": 20,
+        "resultado": "bajo",
+        "detalle": {
+          "encontradas": [
+            "BOOK"
+          ],
+          "intentos": [
+            {
+              "pregunta": "A book",
+              "esperado": "BOOK",
+              "respondio": "BOOK",
+              "ok": true
+            },
+            {
+              "pregunta": "A table",
+              "esperado": "TABLE",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "A chair",
+              "esperado": "CHAIR",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "A water",
+              "esperado": "WATER",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "A house",
+              "esperado": "HOUSE",
+              "respondio": null,
+              "ok": false
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.104Z"
+      },
+      {
+        "nodoId": "e2-refuerzo",
+        "etapa": 2,
+        "carril": "refuerzo",
+        "actividad": "06-diccionario",
+        "escenario": "aula",
+        "puntaje": 0,
+        "resultado": "bajo",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "libro",
+              "esperado": "book",
+              "respondio": "no sé",
+              "ok": false
+            },
+            {
+              "pregunta": "mesa",
+              "esperado": "table",
+              "respondio": "no sé",
+              "ok": false
+            },
+            {
+              "pregunta": "agua",
+              "esperado": "water",
+              "respondio": "no sé",
+              "ok": false
+            },
+            {
+              "pregunta": "casa",
+              "esperado": "house",
+              "respondio": "no sé",
+              "ok": false
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.120Z"
+      },
+      {
+        "nodoId": "e3-refuerzo",
+        "etapa": 3,
+        "carril": "refuerzo",
+        "actividad": "02-conversacion-completar",
+        "escenario": "cafeteria",
+        "puntaje": 0,
+        "resultado": "bajo",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "I live in a _____.",
+              "esperado": "house",
+              "respondio": "water",
+              "ok": false
+            },
+            {
+              "pregunta": "Yes, I love every _____.",
+              "esperado": "book",
+              "respondio": "chair",
+              "ok": false
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.126Z"
+      },
+      {
+        "nodoId": "e4-refuerzo",
+        "etapa": 4,
+        "carril": "refuerzo",
+        "actividad": "12-llamada",
+        "escenario": "casa_llamada",
+        "puntaje": 0,
+        "resultado": "bajo",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "Hi! Are you free today?",
+              "esperado": "Yes, I am free after five.",
+              "respondio": "I am a table.",
+              "ok": false
+            },
+            {
+              "pregunta": "Great, where do we meet?",
+              "esperado": "At my house, please.",
+              "respondio": "Chair the water.",
+              "ok": false
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.135Z"
+      },
+      {
+        "nodoId": "e5-refuerzo",
+        "etapa": 5,
+        "carril": "refuerzo",
+        "actividad": "01-emparejar",
+        "escenario": "biblioteca",
+        "puntaje": 30,
+        "resultado": "bajo",
+        "detalle": {
+          "fallos": 7,
+          "pares": 4,
+          "intentos": [
+            {
+              "pregunta": "clue 1",
+              "esperado": "word 3",
+              "respondio": null,
+              "ok": false
+            },
+            {
+              "pregunta": "clue 2",
+              "esperado": "word 1",
+              "respondio": "word 1",
+              "ok": true
+            },
+            {
+              "pregunta": "clue 3",
+              "esperado": "word 4",
+              "respondio": "word 4",
+              "ok": true
+            },
+            {
+              "pregunta": "clue 4",
+              "esperado": "word 2",
+              "respondio": "word 2",
+              "ok": true
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.154Z"
+      },
+      {
+        "nodoId": "e6-refuerzo",
+        "etapa": 6,
+        "carril": "refuerzo",
+        "actividad": "10-canciones",
+        "escenario": "karaoke",
+        "puntaje": 0,
+        "resultado": "bajo",
+        "detalle": {
+          "intentos": [
+            {
+              "pregunta": "Line 1 needs a _____ here",
+              "esperado": "book",
+              "respondio": "water",
+              "ok": false
+            },
+            {
+              "pregunta": "Line 2 needs a _____ here",
+              "esperado": "book",
+              "respondio": "water",
+              "ok": false
+            },
+            {
+              "pregunta": "Line 3 needs a _____ here",
+              "esperado": "book",
+              "respondio": "water",
+              "ok": false
+            },
+            {
+              "pregunta": "Line 4 needs a _____ here",
+              "esperado": "book",
+              "respondio": "water",
+              "ok": false
+            }
+          ]
+        },
+        "en": "2026-10-13T09:06:29.168Z"
+      }
+    ]
+  },
+  {
+    "id": "d4652259-4d63-4921-a7ff-d871280bb423",
+    "creado_en": "2026-10-13T09:06:29.471Z",
+    "partida_id": "3640c285-f60a-4aed-9c40-e5642bf20ab3",
+    "sala_id": "84f619a3-712d-4231-a7fe-70037c9b9739",
+    "codigo": "95345",
+    "modo": "simple",
+    "estudiante": null,
+    "estudiante_id": "21522147-e79d-4fcf-be2f-62d6a246c6fa",
+    "actividad_codigo": "01-emparejar",
+    "actividad_titulo": "Match the words",
+    "variante": 2,
+    "lecciones": [
+      "Welcome to Benjamin Franklin Institute",
+      "My family and friends"
+    ],
+    "puntaje": 0,
+    "puntaje_maximo": 100,
+    "requiere_revision": false,
+    "detalle": {
+      "fallos": 0,
+      "pares": 0,
+      "intentos": [
+        {
+          "pregunta": "clue 1",
+          "esperado": "word 3",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "clue 2",
+          "esperado": "word 1",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "clue 3",
+          "esperado": "word 4",
+          "respondio": null,
+          "ok": false
+        },
+        {
+          "pregunta": "clue 4",
+          "esperado": "word 2",
+          "respondio": null,
+          "ok": false
+        }
+      ]
+    }
+  }
+]

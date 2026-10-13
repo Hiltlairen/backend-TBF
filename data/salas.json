@@ -55,9 +55,9 @@
     "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
     "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
     "docente_nombre": "William",
-    "activa": true,
+    "activa": false,
     "expira_en": "2026-09-28T05:46:16.210Z",
-    "actualizado_en": "2026-09-28T00:07:40.199Z"
+    "actualizado_en": "2026-10-12T15:35:45.869Z"
   },
   {
     "id": "33e76c2a-2784-4697-ac60-a636d3e5f1eb",
@@ -75,9 +75,9 @@
     "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
     "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
     "docente_nombre": "William",
-    "activa": true,
+    "activa": false,
     "expira_en": "2026-09-28T23:54:46.376Z",
-    "actualizado_en": "2026-09-28T17:56:34.939Z"
+    "actualizado_en": "2026-10-12T15:35:45.324Z"
   },
   {
     "id": "204a0628-d148-4fcb-8369-474c373ce2ee",
@@ -197,5 +197,25 @@
     "activa": true,
     "expira_en": "2026-10-12T07:22:18.324Z",
     "actualizado_en": "2026-10-12T01:22:18.352Z"
+  },
+  {
+    "id": "fc06e64f-0d21-4143-bf5c-4ab87ed217cb",
+    "creado_en": "2026-10-12T15:43:51.949Z",
+    "codigo": "21730",
+    "modo": "simple",
+    "titulo": "Word search",
+    "curso": "2do Libro Mañana",
+    "limite_estudiantes": 5,
+    "estudiantes": [
+      "Teodoro"
+    ],
+    "actividad_id": "6abf7ddf-f18a-4483-aa9c-ab3048041634",
+    "ruta_id": null,
+    "clase_id": "fca04c54-5f1e-4e2d-af59-538494b21e7f",
+    "docente_id": "97404840-6dc8-4bf5-b453-67e0e1edc22b",
+    "docente_nombre": "William",
+    "activa": true,
+    "expira_en": "2026-10-12T21:43:51.949Z",
+    "actualizado_en": "2026-10-12T15:46:51.917Z"
   }
 ]

@@ -1,0 +1,25 @@
+[
+  {
+    "id": "a7b57929-91c8-433a-ba36-e0a216ca931d",
+    "creado_en": "2026-10-13T09:06:29.281Z",
+    "tipo": "vocabulario",
+    "referencia_id": "ffe8b172-5c60-4844-81dd-828f5a763278",
+    "estado": "aprobado",
+    "enviado_por": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "enviado_por_nombre": "Prof. Laura Mamani",
+    "resumen": "skyline = horizonte (Prueba)",
+    "payload": {
+      "id": "557bd41a-fe20-44dc-83e2-abfd8d21a9d0",
+      "lesson_id": 1,
+      "categoria": "Prueba",
+      "ingles": "skyline",
+      "espanol": "horizonte"
+    },
+    "comentario": "Correcto.",
+    "revisado_por": "b92c546b-f2e3-4b05-a4e1-4fdfb32a52ec",
+    "revisado_por_nombre": "Mesa de Curaduría",
+    "revisado_en": "2026-10-13T09:06:29.306Z",
+    "correcciones": null,
+    "actualizado_en": "2026-10-13T09:06:29.306Z"
+  }
+]

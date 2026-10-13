@@ -1,0 +1,44 @@
+[
+  {
+    "id": "84f619a3-712d-4231-a7fe-70037c9b9739",
+    "creado_en": "2026-10-13T09:06:28.668Z",
+    "codigo": "95345",
+    "modo": "simple",
+    "titulo": "Match the words",
+    "curso": "3° B - Mañana",
+    "limite_estudiantes": 30,
+    "estudiantes": [
+      "Estudiante 5"
+    ],
+    "actividad_id": "3f676789-286a-4178-92f0-9be9ad1a8434",
+    "ruta_id": null,
+    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
+    "docente_id": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "docente_nombre": "Prof. Laura Mamani",
+    "activa": true,
+    "expira_en": "2026-10-13T15:06:28.668Z",
+    "actualizado_en": "2026-10-13T09:06:29.465Z"
+  },
+  {
+    "id": "37757ede-5839-4a27-b61f-647f2d301d0c",
+    "creado_en": "2026-10-13T09:06:28.796Z",
+    "codigo": "59219",
+    "modo": "juego",
+    "titulo": "Aventura · L1+L2 · A1",
+    "curso": "3° B - Mañana",
+    "limite_estudiantes": 30,
+    "estudiantes": [
+      "Estudiante 1",
+      "Estudiante 2",
+      "Estudiante 3"
+    ],
+    "actividad_id": null,
+    "ruta_id": "6eff02d5-2514-4a76-a0f7-70fbcf8cf185",
+    "clase_id": "b08b482b-9c24-4912-9041-a7a39ea13e98",
+    "docente_id": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "docente_nombre": "Prof. Laura Mamani",
+    "activa": true,
+    "expira_en": "2026-10-13T15:06:28.796Z",
+    "actualizado_en": "2026-10-13T09:06:29.088Z"
+  }
+]

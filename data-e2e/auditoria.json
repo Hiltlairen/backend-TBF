@@ -1,0 +1,25 @@
+[
+  {
+    "id": "ffe8b172-5c60-4844-81dd-828f5a763278",
+    "creado_en": "2026-10-13T09:06:29.280Z",
+    "tipo": "vocab",
+    "lesson_id": 1,
+    "autor": "27293d07-e6a6-4e1a-a3da-22674e225090",
+    "payload": {
+      "id": "557bd41a-fe20-44dc-83e2-abfd8d21a9d0",
+      "lesson_id": 1,
+      "categoria": "Prueba",
+      "ingles": "skyline",
+      "espanol": "horizonte"
+    }
+  },
+  {
+    "id": "6b9b7e0a-230e-4553-ac86-3ae2f09395b2",
+    "creado_en": "2026-10-13T09:06:29.307Z",
+    "tipo": "revision",
+    "accion": "aprobar",
+    "item_id": "a7b57929-91c8-433a-ba36-e0a216ca931d",
+    "por": "b92c546b-f2e3-4b05-a4e1-4fdfb32a52ec",
+    "por_nombre": "Mesa de Curaduría"
+  }
+]
