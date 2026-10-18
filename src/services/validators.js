@@ -65,7 +65,11 @@ const REGLAS = {
     return null
   },
 
-  '05-redaccion': (a) => (a.consigna && esArray(a.criterios, 1) ? null : 'falta consigna o criterios'),
+  '05-redaccion': (a) => {
+    if (!a.consigna) return 'falta la consigna'
+    if (!a.contexto) return 'falta el contexto (situación de la escritura)'
+    return null
+  },
 
   '06-diccionario': (a) => {
     if (!esArray(a.entradas, 3)) return 'menos de 3 entradas'
@@ -104,13 +108,12 @@ const REGLAS = {
   },
 
   '10-canciones': (a) => {
-    if (!esArray(a.lineas, 4)) return 'menos de 4 líneas'
-    for (const l of a.lineas) {
-      if (!String(l.texto || '').includes('{blank}')) return `línea ${l.id} sin {blank}`
-      if (!l.respuesta_correcta) return `línea ${l.id} sin respuesta`
-      if (!esArray(l.opciones, 2)) return `línea ${l.id} necesita al menos 2 opciones`
-      if (!l.opciones.includes(l.respuesta_correcta)) return `línea ${l.id}: la respuesta no está entre las opciones`
-    }
+    if (!a.cancion?.titulo) return 'falta la canción'
+    if (!['youtube', 'spotify', 'url'].includes(a.audio?.tipo) || !a.audio?.ref) return 'falta la fuente de audio'
+    if (!esArray(a.lineas, 1)) return 'la letra no tiene versos'
+    if (!esArray(a.huecos, 1)) return 'no quedó ninguna palabra para completar (prueba otro tramo o un largo mínimo menor)'
+    const enLetra = new Set(a.lineas.flatMap((l) => (l.partes ?? []).filter((p) => p.hueco).map((p) => p.hueco)))
+    for (const h of a.huecos) if (!h.respuesta || !enLetra.has(h.id)) return `hueco ${h.id} inválido`
     return null
   },
 
@@ -264,7 +267,14 @@ export function validarActividad(codigo, data) {
 // arreglo obvio: se recortan los distractores de más y se quitan los
 // ítems que rompen una regla, SIEMPRE que queden suficientes ítems
 // buenos para la actividad. Si no quedan, sigue siendo inválida.
+// Rúbrica fija de la redacción: el agente evalúa SOLO esto.
+export const CRITERIOS_REDACCION = [
+  { id: 'C1', nombre: 'Contexto', descripcion: 'Responde a la consigna y se adecua a la situación (a quién escribe, dónde, para qué).', peso: 50 },
+  { id: 'C2', nombre: 'Escritura correcta', descripcion: 'Gramática, ortografía y puntuación correctas en inglés.', peso: 50 },
+]
+
 const SANEADORES = {
+  '05-redaccion': (a) => (a ? { ...a, criterios: CRITERIOS_REDACCION } : a),
   '15-laberinto-palabras': (a) => {
     if (!Array.isArray(a?.niveles)) return a
     const vistos = new Set()

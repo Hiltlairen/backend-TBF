@@ -34,6 +34,11 @@ export const config = {
   deepseekTimeoutMs: Number(process.env.DEEPSEEK_TIMEOUT_MS ?? 90000),
 
   geminiApiKey: process.env.GEMINI_API_KEY ?? '',
+
+  // ── Letras de canciones (actividad 10) ──
+  // LRCLIB es gratis y no necesita key. Musixmatch es respaldo opcional
+  // (su plan gratuito devuelve solo parte de la letra).
+  musixmatchApiKey: process.env.MUSIXMATCH_API_KEY ?? '',
   // 'gemini-flash-latest' es un ALIAS que Google mantiene apuntando
   // siempre a la versión Flash estable más reciente (hoy sería
   // 3.8-flash; mañana lo que sea que la reemplace). A propósito NO se

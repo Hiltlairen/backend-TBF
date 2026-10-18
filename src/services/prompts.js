@@ -18,6 +18,8 @@
 //   Recorte aproximado: 70–75 % de tokens de entrada.
 // ============================================================
 
+import { resolverEscenario } from '../domain/scenes.js'
+
 /** Agrupa vocabulario por categoría (solo se usa una vez, en el nodo contexto). */
 function vocabBlock(vocabulario) {
   const porCat = {}
@@ -81,7 +83,7 @@ export const MINI_SCHEMAS = {
 
   '04-sopa-letras': `"04-sopa-letras": {"actividad":{...meta},"configuracion":{"filas":12,"columnas":12,"direcciones":["horizontal","vertical","diagonal"],"mayusculas":true},"palabras":[{"palabra":"UPPERCASE","pista":"short clue"}]}  // solo A-Z, 3..12 letras, sin espacios`,
 
-  '05-redaccion': `"05-redaccion": {"actividad":{...meta,"puntuacion_maxima":100},"consigna":"prompt in English","minimo_palabras":40,"criterios":[{"id":"C1","nombre":"Vocabulary","descripcion":"...","peso":40}]}  // se corrige a mano`,
+  '05-redaccion': `"05-redaccion": {"actividad":{...meta,"puntuacion_maxima":100},"contexto":"one line in Spanish: the situation in THIS scene of the story (where the learner is, who is there, what just happened)","tipo_texto":"message|email|description|opinion|story|reply","destinatario":"who the text is for, or null","consigna":"clear prompt in English that fits the context and text type","minimo_palabras":40}  // the writing MUST make sense in the scene: e.g. at the cafe write a message to the npc, at the library reply to something the learner read. Only words from the bible`,
 
   '06-diccionario': `"06-diccionario": {"actividad":{...meta},"entradas":[{"id":"D1","tipo_entrada":"texto","contenido":"palabra en español","idioma_entrada":"es","respuesta_correcta":"english word","alternativas_aceptadas":[]}]}`,
 
@@ -90,8 +92,6 @@ export const MINI_SCHEMAS = {
   '08-inflexion': `"08-inflexion": {"actividad":{...meta},"reglas_mostradas":[{"id":"R1","titulo":"Add -ING","ejemplo":"run → running","color":"#ef8312"},{"id":"R2","titulo":"Add -ES / -IES","ejemplo":"wash → washes","color":"#142843"}],"ejercicios":[{"id":"E1","tipo":"completar","instruccion":"Add -ING","regla_id":"R1","plantilla":"She is {blank} her homework.","palabra_base":"do","respuesta_correcta":"doing","pista":"do + ing"}]}  // solo R1 y R2`,
 
   '09-describir': `"09-describir": {"actividad":{...meta},"items":[{"id":"I1","tipo_estimulo":"texto","contenido":"1-2 sentences","opciones":[{"id":"I1A","texto":"...","correcta":true},{"id":"I1B","texto":"...","correcta":false},{"id":"I1C","texto":"...","correcta":false}]}]}`,
-
-  '10-canciones': `"10-canciones": {"actividad":{...meta},"cancion":{"titulo":"original title","artista":"Original","tempo":"slow"},"lineas":[{"id":"S1","texto":"line with {blank} inside","respuesta_correcta":"word","opciones":["w1","w2","w3"]}]}  // letra ORIGINAL escrita por ti, NO copies canciones reales`,
 
   '11-indicaciones': `"11-indicaciones": {"actividad":{...meta},"destino":"the library","pasos_desordenados":[{"id":"S1","texto":"Turn left at the corner."}],"orden_correcto":["S3","S1","S2"]}  // 5-7 pasos`,
 
@@ -119,6 +119,20 @@ export const MINI_SCHEMAS = {
 const META_SPEC = `"actividad" (same shape in every activity) =
 {"id":"<activity code>","titulo":"<title>","instrucciones":"<one line, English>","nivel":"<level>","leccion":"<lessons>","tiempo_limite":<seconds>,"puntuacion_maxima":100,"penalizacion_por_error":<pts>,"escenario":"<scene_id>","interaccion":"<interaction>","presencia":"<presence>"}`
 
+// La redacción se adapta al ambiente donde cae (aventura) o al que eligió
+// el docente (actividad suelta): se le da el nombre y qué pasa ahí, y el
+// tipo de texto si el docente lo fijó.
+const TIPO_TEXTO_EN = {
+  mensaje: 'a short message to someone', correo: 'an email', descripcion: 'a description',
+  opinion: 'an opinion or review', relato: 'a short story of what happened', respuesta: 'a reply to something read or heard',
+}
+function detalleRedaccion(s) {
+  const e = resolverEscenario(s.escenario)
+  const tipo = TIPO_TEXTO_EN[s.tipoTexto]
+  return ` | scene_name "${e?.nombre ?? s.escenario}" | scene_detail "${e?.descripcion ?? ''}"`
+    + (tipo ? ` | text_type "${tipo}"` : ' | text_type "choose what fits the scene best"')
+}
+
 // ── 3. LOTE (la llamada que hace el trabajo pesado) ────────
 /**
  * @param {object} bible  salida del nodo contexto
@@ -128,6 +142,7 @@ export function buildBatchPrompt(bible, specs, variante = 1) {
   const esquemas = specs.map((s) => MINI_SCHEMAS[s.codigo]).filter(Boolean).join('\n\n')
   const pedido = specs.map((s) =>
     `- ${s.codigo} → ${s.cantidad} items | scene "${s.escenario}" | interaction "${s.interaccion}" | presence "${s.presencia}" | tiempo_limite ${s.tiempo} | penalizacion_por_error ${s.penalizacion}`
+    + (s.codigo === '05-redaccion' ? detalleRedaccion(s) : '')
   ).join('\n')
 
   return `Generate ${specs.length} English activities at once, as ONE JSON object.

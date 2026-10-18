@@ -256,8 +256,12 @@ export const ACTIVITY_SCENES = {
     dificultad: 4,
     destreza: 'escucha',
     apto: ['troncal', 'final'],
-    requiereRevision: true,
-    guion: 'Sube al escenario, toma el micrófono y la letra aparece en el celular.',
+    // Ya no la escribe la IA: es una canción REAL (letra de LRCLIB) con
+    // huecos que se arman en código (domain/cancionHuecos.js) y se
+    // califica sola. El docente elige la canción y el audio.
+    requiereRevision: false,
+    requiereCancion: true,
+    guion: 'Sube al escenario, toma el micrófono: suena la canción y completas la letra.',
   },
 
   '12-llamada': {
@@ -296,14 +300,21 @@ export const ACTIVITY_SCENES = {
   '05-redaccion': {
     titulo: 'My Writing',
     escenario: 'dormitorio',
-    escenariosAlt: ['biblioteca'],
+    // Puede caer en CUALQUIER ambiente de la aventura: la consigna se
+    // adapta a lo que pasa ahí (escribirle a alguien, contar lo que leyó…).
+    escenariosAlt: [
+      'biblioteca', 'cafeteria', 'parque', 'aula', 'galeria', 'calle', 'restaurante',
+      'recepcion', 'estacion', 'casa_llamada', 'pasillo_llamada', 'estudio_radio',
+    ],
     interaccion: 'ninguna',
     presencia: 'ninguna',
     dificultad: 5,
     destreza: 'escritura',
     apto: ['final'],
+    // El agente la califica (solo contexto y escritura correcta) y el
+    // docente confirma o ajusta la nota en curaduría.
     requiereRevision: true,
-    guion: 'Llega al escritorio de noche y escribe. Cierra la aventura; lo corrige el docente.',
+    guion: 'Se detiene y escribe sobre lo que está pasando. Una IA revisa el texto y el docente confirma la nota.',
   },
 
   '15-laberinto-palabras': {
@@ -337,7 +348,20 @@ export const SOLO_VOCABULARIO = new Set([
   '01-emparejar', '04-sopa-letras', '06-diccionario',
   '17-emparejar-imagenes', '19-impostor', '20-basquetbol',
 ])
-export const requiereIA = (codigo) => !SOLO_VOCABULARIO.has(codigo)
+// La canción (10) tampoco necesita IA: la letra viene de LRCLIB y los
+// huecos se arman en código.
+export const requiereIA = (codigo) => !SOLO_VOCABULARIO.has(codigo) && !ACTIVITY_SCENES[codigo]?.requiereCancion
+
+// ── Redacción (05): tipos de texto que puede pedir la consigna ──
+export const TIPOS_TEXTO = {
+  auto:        'Lo decide la IA según el ambiente',
+  mensaje:     'Mensaje a alguien (chat, nota)',
+  correo:      'Correo electrónico',
+  descripcion: 'Descripción de un lugar, persona u objeto',
+  opinion:     'Opinión o reseña',
+  relato:      'Relato breve de lo que pasó',
+  respuesta:   'Respuesta a algo que leyó o escuchó',
+}
 
 export const codigosActividad = () => Object.keys(ACTIVITY_SCENES)
 export const getActivityScene = (codigo) => ACTIVITY_SCENES[codigo] ?? null
@@ -408,8 +432,8 @@ export const PREGUNTAS_CONFIG = {
   '07-pronunciacion':         { configurable: true,  min: 3, max: 8,  def: 5, unidad: 'palabras' },
   '08-inflexion':             { configurable: true,  min: 4, max: 10, def: 6, unidad: 'ejercicios' },
   '09-describir':             { configurable: true,  min: 3, max: 8,  def: 4, unidad: 'imágenes' },
-  '10-canciones':             { configurable: false, min: 6, max: 6,  def: 6, unidad: 'versos',
-                                motivoFijo: 'La cantidad de huecos la fija la canción.' },
+  '10-canciones':             { configurable: false, min: 1, max: 1,  def: 1, unidad: 'canción',
+                                motivoFijo: 'Los huecos los definen la canción, el tramo elegido y el nivel del libro.' },
   '11-indicaciones':          { configurable: true,  min: 4, max: 8,  def: 6, unidad: 'pasos' },
   '12-llamada':               { configurable: true,  min: 4, max: 8,  def: 6, unidad: 'turnos' },
   '13-pedido':                { configurable: true,  min: 4, max: 8,  def: 6, unidad: 'turnos' },

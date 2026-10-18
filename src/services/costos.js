@@ -20,6 +20,7 @@
 // devuelve una actividad inválida) — por eso es un "≈".
 // ============================================================
 import { config } from '../config.js'
+import { ACTIVITY_SCENES } from '../domain/activityScenes.js'
 import { listar } from '../db/store.js'
 import { buildBiblePrompt, buildBatchPrompt } from './prompts.js'
 import { getCache, claveCache } from './cache.js'
@@ -79,8 +80,16 @@ function calibracion() {
  * caché cuestan 0.
  * @returns {{ entrada, salida, total, costoUSD, desdeCache, variantes, variantesEnCache, sinCalibrar: {entrada, salida}, calibracion }}
  */
-export function estimarGeneracion({ vocabulario, lecciones, nivel, specs, variantes = 1 }) {
+export function estimarGeneracion({ vocabulario, lecciones, nivel, specs: todas, variantes = 1 }) {
   const n = Math.max(1, Math.round(variantes) || 1)
+  // La canción (10) no pasa por la IA: no suma tokens.
+  const specs = todas.filter((s) => !ACTIVITY_SCENES[s.codigo]?.requiereCancion)
+  if (!specs.length) {
+    return {
+      entrada: 0, salida: 0, total: 0, costoUSD: 0, desdeCache: false, sinIA: false, local: true, variantes: n, variantesEnCache: 0,
+      sinCalibrar: { entrada: 0, salida: 0 }, calibracion: null,
+    }
+  }
   const escenarios = [...new Set(specs.map((s) => s.escenario))]
   const bible = bibleTipica(vocabulario, nivel, escenarios)
   const salidaLote = specs.reduce((t, s) => t + SALIDA_POR_ACTIVIDAD + SALIDA_POR_ITEM * (Number(s.cantidad) || 6), 0)

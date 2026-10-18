@@ -82,15 +82,15 @@ const FABRICA = {
         { id: 'C4C', texto: 'Book table now.', correcta: false }] },
     ],
   }),
-  '10-canciones': (s) => ({
-    actividad: META('10-canciones', 'Fill in the lyrics!', s),
-    cancion: { titulo: 'Morning Light', artista: 'Original', tempo: 'slow' },
-    lineas: [1, 2, 3, 4].map((n) => ({
-      id: `S${n}`, texto: `Line ${n} needs a {blank} here`,
-      respuesta_correcta: 'book', opciones: ['book', 'water', 'chair'],
-    })),
-  }),
 }
+
+// La canción (10) no la escribe la IA: sale de LRCLIB (simulado aquí).
+const LETRA = { id: 77, trackName: 'Morning Light', artistName: 'Original', albumName: null, duration: 90, instrumental: false,
+  plainLyrics: 'x', syncedLyrics: [
+    '[00:05.00]Open the window and read your book', '[00:10.00]Morning light is coming home',
+    '[00:15.00]Open the window and read your book', '[00:20.00]Morning light is coming home',
+  ].join('\n') }
+const CANCION = { fuente: 'lrclib', id: '77', audio: { tipo: 'youtube', ref: 'https://youtu.be/dQw4w9WgXcQ' } }
 
 const BIBLE = {
   tema: 'A day in the city', protagonista: 'Ana', npc: 'Tom', nivel: 'A2',
@@ -101,6 +101,7 @@ const BIBLE = {
 // ── Interceptor ────────────────────────────────────────────
 globalThis.fetch = async (url, opciones) => {
   const u = String(url)
+  if (u.startsWith('https://lrclib.net/api/get/77')) return Response.json(LETRA)
   if (!u.includes('generativelanguage.googleapis.com')) return realFetch(url, opciones)
 
   llamadasGemini += 1
@@ -213,7 +214,7 @@ console.log('\n3) Modo aventura (LangGraph)')
 llamadasGemini = 0
 const codigos = ['01-emparejar', '04-sopa-letras', '06-diccionario', '02-conversacion-completar', '12-llamada', '10-canciones']
 const aventura = await req('POST', '/api/activities/generar-ruta', {
-  actividades: codigos, lecciones: [1, 2], claseId,
+  actividades: codigos, lecciones: [1, 2], claseId, configs: { '10-canciones': { cancion: CANCION } },
 }, tokDoc)
 check('genera la aventura', aventura.estado === 201, aventura.datos?.error ?? '')
 check('6 actividades generadas', Object.keys(aventura.datos?.ruta?.contenidos ?? {}).length === 6)
@@ -227,7 +228,7 @@ check('18 nodos en el grafo', Object.keys(aventura.datos?.ruta?.ruta?.nodos ?? {
 
 // Caché: repetir la misma combinación no debe llamar a Gemini
 llamadasGemini = 0
-const cacheado = await req('POST', '/api/activities/generar-ruta', { actividades: codigos, lecciones: [1, 2], claseId }, tokDoc)
+const cacheado = await req('POST', '/api/activities/generar-ruta', { actividades: codigos, lecciones: [1, 2], claseId, configs: { '10-canciones': { cancion: CANCION } } }, tokDoc)
 check('la caché evita regenerar', cacheado.estado === 201 && llamadasGemini === 0, `HTTP ${cacheado.estado}, ${llamadasGemini} llamada(s)`)
 
 const salaJuego = await req('POST', '/api/rooms', { modo: 'juego', rutaId: aventura.datos.ruta.id }, tokDoc)
@@ -275,7 +276,7 @@ function respuestasPara(codigo, d, bien) {
     case '12-llamada':
       return { items: d.turnos.filter((t) => t.tipo === 'opciones').map((t, i) => ({ i, opcion: elegir(t.opciones) })) }
     case '10-canciones':
-      return { items: d.lineas.map((l, i) => ({ i, opcion: bien ? l.respuesta_correcta : l.opciones.find((o) => o !== l.respuesta_correcta) })) }
+      return { huecos: Object.fromEntries(d.huecos.map((h) => [h.id, bien ? h.respuesta : 'zzz'])) }
     default:
       return {}
   }

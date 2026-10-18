@@ -30,9 +30,18 @@ describe('quiz (conversación, canción, anuncios…)', () => {
     expect(r.intentos[1]).toMatchObject({ respondio: null, ok: false }) // sin responder
   })
 
-  it('canciones: las opciones son strings y la correcta es respuesta_correcta', () => {
-    const cancion = { ...meta(0), lineas: [{ id: 'S1', texto: 'I {blank} you', respuesta_correcta: 'love', opciones: ['love', 'eat'] }] }
-    expect(calificar('10-canciones', cancion, { items: [{ i: 0, opcion: 'love' }] }).puntaje).toBe(100)
+  it('canciones: cada hueco se compara con la palabra original (sin mayúsculas, tildes ni apóstrofos raros)', () => {
+    const cancion = {
+      ...meta(0),
+      lineas: [{ id: 'L1', partes: [{ texto: 'I ' }, { hueco: 'H1' }, { texto: ' you, ' }, { hueco: 'H2' }] }],
+      huecos: [{ id: 'H1', respuesta: 'love', linea: 'L1' }, { id: 'H2', respuesta: "don't", linea: 'L1' }],
+    }
+    const r = calificar('10-canciones', cancion, { huecos: { H1: ' LOVE ', H2: 'don’t' } })
+    expect(r.puntaje).toBe(100)
+    const mal = calificar('10-canciones', cancion, { huecos: { H1: 'leave' } })
+    expect(mal.puntaje).toBe(0)
+    expect(mal.intentos[0]).toMatchObject({ pregunta: 'I _____ you, …', esperado: 'love', respondio: 'leave', ok: false })
+    expect(mal.intentos[1]).toMatchObject({ respondio: null, ok: false })
   })
 })
 

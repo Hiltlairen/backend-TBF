@@ -35,6 +35,7 @@ import { buildBiblePrompt, buildBatchPrompt, buildRepairPrompt } from '../prompt
 import { validarLote, validarActividad } from '../validators.js'
 import { getCache, setCache, claveCache } from '../cache.js'
 import { generarBibleLocal, generarLoteLocal } from '../generadorLocal.js'
+import { armarActividadCancion } from '../../domain/cancionHuecos.js'
 
 const MAX_REPARACIONES = 2
 
@@ -178,8 +179,26 @@ export const appGrafo = grafo.compile()
  * @param {Array}  p.specs  [{codigo, escenario, interaccion, presencia, cantidad, tiempo, penalizacion}]
  * @param {object} [p.sinIA]  estadoIA() si la IA está en pausa: no se intenta llamar a Gemini
  */
-export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs, variante = 1, sinIA = null, bible = null, maxReparaciones = MAX_REPARACIONES }) {
-  if (!specs?.length) throw new Error('No se indicaron actividades a generar.')
+export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs: todas, variante = 1, sinIA = null, bible = null, maxReparaciones = MAX_REPARACIONES }) {
+  if (!todas?.length) throw new Error('No se indicaron actividades a generar.')
+
+  // La canción (10) no la escribe la IA: la letra real ya viene en la
+  // spec (cancionData) y los huecos se arman en código, distintos en
+  // cada variante. El resto sigue por el grafo.
+  const locales = Object.fromEntries(todas.filter((s) => s.cancionData).map((s) => [s.codigo, armarActividadCancion({
+    cancion: s.cancionData, audio: s.audio, opciones: s.opcionesCancion, nivel, spec: s, variante,
+  })]))
+  const specs = todas.filter((s) => !s.cancionData)
+  if (!specs.length) {
+    const { validas, fallidas } = validarLote(locales, Object.keys(locales))
+    return {
+      actividades: validas, fallidas, cacheKey: null, bible: bible ?? generarBibleLocal({ lecciones, nivel, vocabulario, variante }),
+      telemetria: {
+        llamadasGemini: 0, desdeCache: false, llamadasEvitadas: 0, tokensEntrada: 0, tokensSalida: 0,
+        porProveedor: {}, traza: ['canción: letra con huecos armada en código — 0 llamadas'], modoLocal: false, sinIANecesaria: true,
+      },
+    }
+  }
 
   const cacheKey = claveCache({ lecciones, nivel, specs, variante })
 
@@ -226,8 +245,8 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs,
     }
   }
 
-  const codigos = specs.map((x) => x.codigo)
-  const { validas, fallidas } = validarLote(estadoFinal.actividades, codigos)
+  const codigos = [...specs.map((x) => x.codigo), ...Object.keys(locales)]
+  const { validas, fallidas } = validarLote({ ...estadoFinal.actividades, ...locales }, codigos)
 
   return {
     actividades: validas,

@@ -23,7 +23,7 @@ import { statsCache, limpiarCache, borrarCache } from '../services/cache.js'
 import {
   ACTIVITY_SCENES, NOTAS_COHERENCIA, elegirEscenario, PREGUNTAS_CONFIG, preguntasDe, cantidadValida,
   catalogoOrdenadoPorDificultad, catalogoPorFranjas, NIVELES_DIFICULTAD,
-  SOLO_VOCABULARIO, requiereIA,
+  SOLO_VOCABULARIO, requiereIA, TIPOS_TEXTO,
 } from '../domain/activityScenes.js'
 import { listarEscenarios, resolverEscenario, INTERACCIONES, PRESENCIAS } from '../domain/scenes.js'
 import { construirRuta, resumenRuta, UMBRALES_DEFAULT } from '../domain/routeBuilder.js'
@@ -33,6 +33,9 @@ import { revisarContenido } from '../services/moderacion.js'
 import { estimarGeneracion, costoUSD } from '../services/costos.js'
 import { hojaDeRespuestas } from '../domain/calificador.js'
 import { totalVariantes, contenidoDeActividad, contenidosDeRuta } from '../domain/variantes.js'
+import { configCancionSchema } from './canciones.routes.js'
+import { normalizarAudio } from '../domain/cancionHuecos.js'
+import { obtenerCancion } from '../services/canciones.js'
 
 const r = Router()
 
@@ -48,8 +51,37 @@ function specDe(codigo, escenarioId, cfg = {}) {
     cantidad: cantidadValida(codigo, cfg.cantidad),
     tiempo: cfg.tiempo ?? 120,
     penalizacion: cfg.penalizacion ?? 10,
+    // Redacción: el tipo de texto que fijó el docente ('auto' = lo decide la IA).
+    ...(codigo === '05-redaccion' && TIPOS_TEXTO[cfg.tipoTexto] && cfg.tipoTexto !== 'auto' ? { tipoTexto: cfg.tipoTexto } : {}),
+    // Canción: la elección del docente; la letra se trae en prepararCanciones().
+    ...(ACTIVITY_SCENES[codigo]?.requiereCancion && cfg.cancion ? { cancionCfg: cfg.cancion } : {}),
   }
 }
+
+// ── Canción (10) ───────────────────────────────────────────
+// Antes de generar se valida la canción elegida y se trae su letra del
+// servicio de letras (LRCLIB / Musixmatch). La letra viaja en la spec y
+// el grafo arma los huecos en código (ver generarLote).
+async function prepararCanciones(specs) {
+  for (const s of specs) {
+    if (!ACTIVITY_SCENES[s.codigo]?.requiereCancion) continue
+    const falla = (msg, status = 400) => { const e = new Error(msg); e.status = status; throw e }
+    const cfg = configCancionSchema.safeParse(s.cancionCfg)
+    if (!cfg.success) falla(`"${ACTIVITY_SCENES[s.codigo].titulo}": elige la canción y de dónde sale el audio.`)
+    try { s.audio = normalizarAudio(cfg.data.audio) } catch (e) { falla(e.message) }
+    let cancion
+    try { cancion = await obtenerCancion(cfg.data.fuente, cfg.data.id) } catch {
+      falla('El servicio de letras no responde ahora. Inténtalo de nuevo en un momento.', 503)
+    }
+    if (!cancion) falla('No se encontró la letra de esa canción.', 404)
+    s.cancionData = cancion
+    s.opcionesCancion = cfg.data.opciones ?? {}
+    delete s.cancionCfg
+  }
+  return specs
+}
+// Solo canciones: no hay nada que pedirle a la IA (una variante por estudiante).
+const soloLocales = (specs) => specs.every((s) => ACTIVITY_SCENES[s.codigo]?.requiereCancion)
 
 function cargarLecciones(ids) {
   const ls = (ids ?? []).map((id) => leccionPorId(id)).filter(Boolean)
@@ -244,7 +276,7 @@ r.get('/catalogo', requiereAuth, (_req, res) => {
   }))
   res.json({
     catalogo, franjas, nivelesDificultad: NIVELES_DIFICULTAD,
-    notasCoherencia: NOTAS_COHERENCIA, preguntasConfig: PREGUNTAS_CONFIG,
+    notasCoherencia: NOTAS_COHERENCIA, preguntasConfig: PREGUNTAS_CONFIG, tiposTexto: TIPOS_TEXTO,
     ia: estadoIA(),
   })
 })
@@ -307,9 +339,10 @@ r.post('/generar', requiereAuth, requiereRol('admin', 'docente'), validar(genera
     const vocab = await cargarVocabulario(ls.map((l) => l.id))
     if (!vocab.length) return res.status(400).json({ error: 'Esas lecciones no tienen vocabulario.' })
 
-    const specs = specsSimple(codigo, cfg, cantidad)
+    const specs = await prepararCanciones(specsSimple(codigo, cfg, cantidad))
     const [spec] = specs
-    const pedidas = cuantasVariantes(clase, ia.disponible)
+    // La canción no gasta IA: una variante (huecos distintos) por estudiante.
+    const pedidas = cuantasVariantes(clase, ia.disponible && !soloLocales(specs))
     const estimacion = estimarGeneracion({ vocabulario: vocab, lecciones: ls, nivel, specs, variantes: pedidas })
     const salida = await generarVariantes({
       vocabulario: vocab, lecciones: ls, nivel, specs, cantidad: pedidas, sinIA: ia.disponible ? null : ia,
@@ -341,7 +374,9 @@ r.post('/generar', requiereAuth, requiereRol('admin', 'docente'), validar(genera
     if (!limpias.length) {
       registrar(null, 0)
       return res.status(422).json({
-        error: 'El contenido generado no pasó el filtro automático de moderación. Genera de nuevo — a veces basta con volver a pedirlo.',
+        error: spec.cancionData
+          ? 'La letra de esta canción no pasó el filtro de moderación (lenguaje no apto para clase). Elige otra canción.'
+          : 'El contenido generado no pasó el filtro automático de moderación. Genera de nuevo — a veces basta con volver a pedirlo.',
       })
     }
 
@@ -404,12 +439,13 @@ r.post('/generar-ruta', requiereAuth, requiereRol('admin', 'docente'), validar(g
     const ia = estadoIA()
     const conIA = specs.map((x) => x.codigo).filter(requiereIA)
     if (!ia.disponible && conIA.length) return res.status(503).json(respuestaSinIA(ia, conIA))
+    await prepararCanciones(specs)
     const ls = cargarLecciones(ids)
     const nivel = nivelDeLecciones(ls)   // el nivel lo fija el libro, no el docente
     const vocab = await cargarVocabulario(ls.map((l) => l.id))
     if (!vocab.length) return res.status(400).json({ error: 'Esas lecciones no tienen vocabulario.' })
 
-    const pedidas = cuantasVariantes(clase, ia.disponible)
+    const pedidas = cuantasVariantes(clase, ia.disponible && !soloLocales(specs))
     const estimacion = estimarGeneracion({ vocabulario: vocab, lecciones: ls, nivel, specs, variantes: pedidas })
     const salida = await generarVariantes({
       vocabulario: vocab, lecciones: ls, nivel, specs, cantidad: pedidas, sinIA: ia.disponible ? null : ia,
@@ -523,16 +559,16 @@ r.post('/estimar', requiereAuth, requiereRol('admin', 'docente'), validar(estima
     // Sin IA no se llama a Gemini: lo que se pueda armar sale gratis del
     // generador local (o de la caché, si ya estaba hecho con IA).
     const ia = estadoIA()
-    const variantes = cuantasVariantes(clase, ia.disponible)
+    const variantes = cuantasVariantes(clase, ia.disponible && !soloLocales(specs))
     const est = estimarGeneracion({ vocabulario: vocab, lecciones: ls, nivel, specs, variantes })
-    const sinIA = !ia.disponible && !est.desdeCache
+    const sinIA = !ia.disponible && !est.desdeCache && !est.local
 
     res.json({
       estimacion: sinIA
         ? { entrada: 0, salida: 0, total: 0, costoUSD: 0, desdeCache: false, sinIA: true, muestrasCalibracion: 0, variantes }
         : {
           entrada: est.entrada, salida: est.salida, total: est.total, costoUSD: est.costoUSD,
-          desdeCache: est.desdeCache, muestrasCalibracion: est.calibracion?.muestras ?? 0,
+          desdeCache: est.desdeCache, local: Boolean(est.local), muestrasCalibracion: est.calibracion?.muestras ?? 0,
           variantes, variantesEnCache: est.variantesEnCache,
         },
       ia,

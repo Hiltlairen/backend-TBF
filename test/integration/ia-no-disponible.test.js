@@ -69,7 +69,7 @@ describe('cuando se agota la cuota', () => {
     expect(res.body.ia.disponible).toBe(false)
     expect(new Date(res.body.ia.reintentarEn).getTime()).toBeGreaterThan(Date.now() + 100_000) // retryDelay 120s
     const porCodigo = Object.fromEntries(res.body.catalogo.map((a) => [a.codigo, a.requiereIA]))
-    expect(Object.keys(porCodigo).filter((c) => !porCodigo[c]).sort()).toEqual(VOCABULARIO_VOCAB)
+    expect(Object.keys(porCodigo).filter((c) => !porCodigo[c]).sort()).toEqual([...VOCABULARIO_VOCAB, '10-canciones'].sort())
   })
 
   it('las de vocabulario se arman sin IA, sin llamar a Gemini y respetando la cantidad', async () => {

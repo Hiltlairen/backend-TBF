@@ -39,7 +39,7 @@ export function claveCache({ lecciones, nivel, specs, variante = 1 }) {
     l: [...(lecciones ?? [])].map((x) => x.id ?? x).sort(),
     n: nivel,
     s: [...(specs ?? [])]
-      .map((x) => `${x.codigo}:${x.cantidad}:${x.escenario}:${x.tiempo}:${x.penalizacion}`)
+      .map((x) => `${x.codigo}:${x.cantidad}:${x.escenario}:${x.tiempo}:${x.penalizacion}${x.tipoTexto ? `:${x.tipoTexto}` : ''}`)
       .sort(),
   }
   if (variante > 1) base.v = variante

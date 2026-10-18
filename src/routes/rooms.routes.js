@@ -19,6 +19,7 @@ import { generarRetroalimentacion } from '../services/tutorIA.js'
 import { esMismaPersona } from '../services/identidad.js'
 import { totalVariantes, contenidoDeActividad, contenidosDeRuta, elegirVariante } from '../domain/variantes.js'
 import { estadoIA } from '../services/gemini.js'
+import { evaluarConTope } from '../services/evaluadorRedaccion.js'
 import { logger } from '../services/logger.js'
 import { validar } from '../middleware/validar.js'
 import {
@@ -284,13 +285,33 @@ juego.post('/iniciar', requiereAuth, mismaSala(), validar(iniciarPartidaSchema),
   })
 })
 
+// ── Redacción (05): la evalúa la IA ──────────────────────────
+// Solo contexto y escritura correcta (services/evaluadorRedaccion.js).
+// La nota es PROVISIONAL: la entrega sigue pendiente de que el docente
+// la confirme. Sin IA (o si tarda demasiado) queda sin nota, como antes.
+const TOPE_EVALUACION_MS = 30_000
+
+async function evaluarSiEsRedaccion(codigo, contenido, calificacion, nivel, alLlegarTarde) {
+  if (codigo !== '05-redaccion') return calificacion
+  const ev = await evaluarConTope(
+    { nivel, contenido, texto: calificacion.detalle?.texto ?? '' },
+    { ms: TOPE_EVALUACION_MS, alLlegarTarde },
+  )
+  return ev ? conEvaluacion(calificacion, ev) : calificacion
+}
+// La evaluación va aparte (no como intentos): el resumen final la muestra
+// en su propio bloque, y el repaso de "aciertos" no aplica a un texto libre.
+function conEvaluacion(calificacion, ev) {
+  return { ...calificacion, puntaje: ev.total, detalle: { ...calificacion.detalle, evaluacion_ia: ev } }
+}
+
 /** Intentos de cada etapa del historial, en el formato que espera armarRepaso(). */
 const etapasDe = (historial) => (historial ?? []).map((h) => ({ intentos: h.detalle?.intentos ?? [] }))
 
 // POST /api/game/avanzar — Body: { partidaId, respuestas }
 // Es el corazón de la lógica: respuestas → nota (calculada aquí) →
 // escenario siguiente.
-juego.post('/avanzar', requiereAuth, validar(avanzarPartidaSchema), (req, res) => {
+juego.post('/avanzar', requiereAuth, validar(avanzarPartidaSchema), async (req, res) => {
   const { partidaId, respuestas } = req.body
   const partida = buscar('partidas', (p) => p.id === partidaId)
   if (!partida) return res.status(404).json({ error: 'Partida no encontrada.' })
@@ -304,8 +325,14 @@ juego.post('/avanzar', requiereAuth, validar(avanzarPartidaSchema), (req, res) =
 
   const contenidos = contenidosDeRuta(ruta, partida.variante ?? 1)
   const nodo = ruta.ruta.nodos[partida.nodoActual]
-  const calificacion = calificar(nodo.actividad, contenidos[nodo.actividad], respuestas)
-  // Redacción (sin nota automática) cuenta como 0 para la ramificación,
+  const calificacion = await evaluarSiEsRedaccion(nodo.actividad, contenidos[nodo.actividad],
+    calificar(nodo.actividad, contenidos[nodo.actividad], respuestas), ruta.nivel ?? 'A2')
+  // La partida pudo avanzar mientras la IA evaluaba (doble envío): no se pisa.
+  const fresca = buscar('partidas', (p) => p.id === partidaId)
+  if (fresca.estado === 'terminada' || fresca.nodoActual !== partida.nodoActual) {
+    return res.status(409).json({ error: 'Esa etapa ya se entregó.' })
+  }
+  // Redacción sin evaluación de la IA cuenta como 0 para la ramificación,
   // igual que antes, cuando el navegador mandaba `puntaje ?? 0`.
   const normalizado = calificacion.puntaje ?? 0
   const resultado = clasificar(normalizado, ruta.ruta.umbrales)
@@ -347,6 +374,7 @@ juego.post('/avanzar', requiereAuth, validar(avanzarPartidaSchema), (req, res) =
         puntaje: h.puntaje, resultado: h.resultado,
       })),
       repaso: armarRepaso(etapasDe(historial), ruta.lecciones_ids),
+      evaluacionIA: historial.find((h) => h.detalle?.evaluacion_ia)?.detalle.evaluacion_ia ?? null,
       iaDisponible: estadoIA().disponible,
     })
   }
@@ -372,7 +400,7 @@ juego.post('/avanzar', requiereAuth, validar(avanzarPartidaSchema), (req, res) =
 })
 
 // POST /api/game/entregar-simple — Body: { partidaId, respuestas }
-juego.post('/entregar-simple', requiereAuth, validar(entregarSimpleSchema), (req, res) => {
+juego.post('/entregar-simple', requiereAuth, validar(entregarSimpleSchema), async (req, res) => {
   const { partidaId, respuestas } = req.body
   const partida = buscar('partidas', (p) => p.id === partidaId)
   if (!partida) return res.status(404).json({ error: 'Partida no encontrada.' })
@@ -384,7 +412,20 @@ juego.post('/entregar-simple', requiereAuth, validar(entregarSimpleSchema), (req
   const sala = buscar('salas', (s) => s.id === partida.sala_id)
   const act = buscar('actividades', (a) => a.id === sala?.actividad_id)
   if (!act) return res.status(404).json({ error: 'La actividad de esta sala ya no existe.' })
-  const calificacion = calificar(act.codigo, contenidoDeActividad(act, partida.variante ?? 1), respuestas)
+  const contenido = contenidoDeActividad(act, partida.variante ?? 1)
+  // Si la IA tarda más que el tope, la evaluación se guarda cuando llegue.
+  let resultadoId = null
+  const guardarTarde = (ev) => {
+    const rdo = resultadoId && buscar('resultados', (x) => x.id === resultadoId)
+    if (!rdo || !rdo.requiere_revision) return
+    const c = conEvaluacion({ puntaje: null, detalle: rdo.detalle ?? {} }, ev)
+    actualizar('resultados', rdo.id, { puntaje: c.puntaje, puntaje_provisional: true, detalle: c.detalle })
+  }
+  const calificacion = await evaluarSiEsRedaccion(act.codigo, contenido, calificar(act.codigo, contenido, respuestas),
+    act.nivel ?? 'A2', guardarTarde)
+  if (buscar('partidas', (p) => p.id === partidaId)?.estado === 'terminada') {
+    return res.status(409).json({ error: 'Ya entregaste esta actividad.' })
+  }
   const normalizado = calificacion.puntaje ?? 0
 
   // El historial de una partida simple tiene UNA etapa: así el resumen
@@ -403,8 +444,11 @@ juego.post('/entregar-simple', requiereAuth, validar(entregarSimpleSchema), (req
     lecciones: (act?.lecciones_ids ?? []).map((id) => leccionPorId(id)?.titulo).filter(Boolean),
     puntaje: normalizado, puntaje_maximo: 100,
     requiere_revision: requiereRevision,
+    // Nota de la IA (redacción) que el docente todavía debe confirmar.
+    ...(calificacion.detalle?.evaluacion_ia ? { puntaje_provisional: true } : {}),
     detalle: calificacion.detalle,
   })
+  resultadoId = resultado.id
 
   if (requiereRevision) {
     // El nombre NO se mete en `resumen` (texto opaco, no se puede
@@ -423,6 +467,7 @@ juego.post('/entregar-simple', requiereAuth, validar(entregarSimpleSchema), (req
 
   res.json({
     ok: true, puntaje: normalizado, requiereRevision,
+    evaluacionIA: calificacion.detalle?.evaluacion_ia ?? null,
     repaso: armarRepaso(etapasDe(historial), act.lecciones_ids),
     iaDisponible: estadoIA().disponible,
   })

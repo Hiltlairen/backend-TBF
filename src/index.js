@@ -26,6 +26,7 @@ import reviewRoutes   from './routes/review.routes.js'
 import resultsRoutes  from './routes/results.routes.js'
 import adminRoutes    from './routes/admin.routes.js'
 import classesRoutes  from './routes/classes.routes.js'
+import cancionesRoutes from './routes/canciones.routes.js'
 import { salas, juego } from './routes/rooms.routes.js'
 
 const app = express()
@@ -111,6 +112,7 @@ app.use('/api/review', reviewRoutes)
 app.use('/api/results', resultsRoutes)
 app.use('/api/admin', adminRoutes)
 app.use('/api/clases', classesRoutes)
+app.use('/api/canciones', cancionesRoutes)
 
 app.use(noEncontrado)
 app.use(manejadorErrores)

@@ -73,14 +73,6 @@ function itemsQuiz(codigo, d) {
     case '09-describir':
       for (const it of lista(d.items)) items.push({ pregunta: it.contenido, opciones: lista(it.opciones) })
       break
-    case '10-canciones':
-      for (const l of lista(d.lineas)) {
-        items.push({
-          pregunta: String(l.texto ?? '').replace('{blank}', '_____'),
-          opciones: lista(l.opciones).map((o) => ({ texto: o, correcta: o === l.respuesta_correcta })),
-        })
-      }
-      break
     case '12-llamada':
     case '13-pedido': {
       let ultima = null
@@ -128,6 +120,30 @@ function itemsEscribir(codigo, d) {
       : `${e.instruccion}: ${e.palabra_base}`,
     respuesta: e.respuesta_correcta, alternativas: [],
   }))
+}
+
+// Canción (10): cada hueco se compara con la palabra original, sin
+// importar mayúsculas, tildes, signos ni el tipo de apóstrofo.
+const normalizarPalabra = (s) => String(s ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+  .replace(/[’‘`´]/g, "'").toLowerCase().replace(/[^a-z0-9']/g, '')
+
+/** El verso con el hueco marcado, para el repaso y la hoja de respuestas. */
+function versoConHueco(d, hueco) {
+  const linea = lista(d.lineas).find((l) => l.id === hueco.linea)
+  if (!linea) return null
+  return lista(linea.partes).map((p) => (p.hueco === hueco.id ? '_____' : p.hueco ? '…' : p.texto)).join('')
+}
+
+function calificarCancion(d, r) {
+  const escritos = r?.huecos && typeof r.huecos === 'object' ? r.huecos : {}
+  const intentos = lista(d.huecos).map((h) => {
+    const escrito = typeof escritos[h.id] === 'string' ? escritos[h.id].slice(0, 60) : null
+    return {
+      pregunta: versoConHueco(d, h), esperado: h.respuesta, respondio: escrito,
+      ok: escrito != null && normalizarPalabra(escrito) === normalizarPalabra(h.respuesta),
+    }
+  })
+  return { puntaje: pct(intentos.filter((x) => x.ok).length, intentos.length), intentos }
 }
 
 function calificarEscribir(codigo, d, r) {
@@ -287,7 +303,6 @@ export function calificar(codigo, contenido, respuestas) {
     case '02-conversacion-completar':
     case '03-conversation-selection':
     case '09-describir':
-    case '10-canciones':
     case '12-llamada':
     case '13-pedido':
     case '14-anuncios':
@@ -299,6 +314,7 @@ export function calificar(codigo, contenido, respuestas) {
     case '17-emparejar-imagenes':
       salida = calificarEmparejar(d, r, penalizacion); break
     case '11-indicaciones':  salida = calificarOrdenar(d, r); break
+    case '10-canciones':     salida = calificarCancion(d, r); break
     case '04-sopa-letras':   salida = calificarSopa(d, r); break
     case '15-laberinto-palabras': salida = calificarLaberinto(d, r); break
     case '16-rompecabezas-oracion': salida = calificarRompecabezas(d, r); break
@@ -330,7 +346,8 @@ export function hojaDeRespuestas(codigo, contenido) {
   const d = contenido ?? {}
   if (codigo === '05-redaccion') {
     return [
-      { pregunta: d.consigna ?? null, esperado: `Mínimo ${d.minimo_palabras ?? 40} palabras · la corrige el docente` },
+      { pregunta: d.contexto ? `Situación: ${d.contexto}` : null, esperado: d.tipo_texto ? `Tipo de texto: ${d.tipo_texto}` : null },
+      { pregunta: d.consigna ?? null, esperado: `Mínimo ${d.minimo_palabras ?? 40} palabras · la evalúa la IA y la confirma el docente` },
       ...lista(d.criterios).map((c) => ({ pregunta: `Criterio: ${c.nombre}`, esperado: `${c.peso}%` })),
     ]
   }

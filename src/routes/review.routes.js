@@ -97,8 +97,15 @@ r.post('/:id/decidir', ...soloCuradores, validar(decidirRevisionSchema), (req, r
     actualizar('resultados', item.referencia_id, {
       puntaje: correcciones.puntaje,
       requiere_revision: false,
+      puntaje_provisional: false,
       comentario_docente: comentario,
     })
+  } else if (item.tipo === 'entrega' && decision === 'aprobar') {
+    // Aprobar sin tocar la nota = el docente confirma la que propuso la IA.
+    const rdo = buscar('resultados', (a) => a.id === item.referencia_id)
+    if (rdo?.puntaje_provisional) {
+      actualizar('resultados', rdo.id, { requiere_revision: false, puntaje_provisional: false, comentario_docente: comentario })
+    }
   }
 
   insertar('auditoria', {
