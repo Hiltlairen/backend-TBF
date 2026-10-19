@@ -36,6 +36,7 @@ import { validarLote, validarActividad } from '../validators.js'
 import { getCache, setCache, claveCache } from '../cache.js'
 import { generarBibleLocal, generarLoteLocal } from '../generadorLocal.js'
 import { armarActividadCancion } from '../../domain/cancionHuecos.js'
+import { conRutas, conMapas } from '../../domain/rutasMapa.js'
 
 const MAX_REPARACIONES = 2
 
@@ -105,8 +106,11 @@ async function nodoLote(s) {
 // ── NODO: validar (0 llamadas) ─────────────────────────────
 async function nodoValidar(s) {
   const codigos = s.specs.map((x) => x.codigo)
-  const { fallidas } = validarLote(s.actividades, codigos)
+  // La 07 se valida contra su ruta real: se le pega el mapa antes.
+  const actividades = conMapas(s.actividades, s.specs)
+  const { fallidas } = validarLote(actividades, codigos)
   return {
+    actividades,
     fallidas,
     traza: [fallidas.length
       ? `validar: ${fallidas.length} rechazadas → ${fallidas.map((f) => `${f.codigo} (${f.motivo})`).join('; ')}`
@@ -128,7 +132,7 @@ async function nodoReparar(s) {
         temperature: 0.6, maxOutputTokens: 4000,
       })
       llamadas += 1
-      const data = json?.[codigo] ?? json
+      const data = conMapas({ [codigo]: json?.[codigo] ?? json }, [spec])[codigo]
       const sigueMal = validarActividad(codigo, data)
       if (!sigueMal) { parches[codigo] = data; traza.push(`reparar: ${codigo} OK`) }
       else traza.push(`reparar: ${codigo} sigue fallando (${sigueMal})`)
@@ -188,7 +192,8 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs:
   const locales = Object.fromEntries(todas.filter((s) => s.cancionData).map((s) => [s.codigo, armarActividadCancion({
     cancion: s.cancionData, audio: s.audio, opciones: s.opcionesCancion, nivel, spec: s, variante,
   })]))
-  const specs = todas.filter((s) => !s.cancionData)
+  // Indicaciones (07): cada variante recorre otra ruta real de La Paz.
+  const specs = conRutas(todas.filter((s) => !s.cancionData), { nivel, variante, lecciones })
   if (!specs.length) {
     const { validas, fallidas } = validarLote(locales, Object.keys(locales))
     return {
@@ -246,7 +251,7 @@ export async function generarLote({ vocabulario, lecciones, nivel = 'A2', specs:
   }
 
   const codigos = [...specs.map((x) => x.codigo), ...Object.keys(locales)]
-  const { validas, fallidas } = validarLote({ ...estadoFinal.actividades, ...locales }, codigos)
+  const { validas, fallidas } = validarLote({ ...conMapas(estadoFinal.actividades, specs), ...locales }, codigos)
 
   return {
     actividades: validas,

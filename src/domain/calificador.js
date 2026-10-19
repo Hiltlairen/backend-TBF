@@ -73,6 +73,9 @@ function itemsQuiz(codigo, d) {
     case '09-describir':
       for (const it of lista(d.items)) items.push({ pregunta: it.contenido, opciones: lista(it.opciones) })
       break
+    case '07-direcciones':
+      for (const p of lista(d.pasos)) items.push({ pregunta: p.instruccion, opciones: lista(p.opciones) })
+      break
     case '12-llamada':
     case '13-pedido': {
       let ultima = null
@@ -303,6 +306,7 @@ export function calificar(codigo, contenido, respuestas) {
     case '02-conversacion-completar':
     case '03-conversation-selection':
     case '09-describir':
+    case '07-direcciones':
     case '12-llamada':
     case '13-pedido':
     case '14-anuncios':

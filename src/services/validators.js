@@ -80,6 +80,21 @@ const REGLAS = {
     return null
   },
 
+  '07-direcciones': (a) => {
+    const ruta = a.mapa?.pasos
+    if (!esArray(ruta, 1)) return 'falta la ruta del mapa'
+    if (!['seguir', 'dar'].includes(a.modo)) return 'modo debe ser "seguir" o "dar"'
+    if (!a.destino?.nombre) return 'falta el destino'
+    if (!esArray(a.pasos, 1) || a.pasos.length !== ruta.length) return `deben ser ${ruta.length} pasos (uno por tramo de la ruta), llegaron ${a.pasos?.length ?? 0}`
+    for (const [i, p] of a.pasos.entries()) {
+      if (!p.instruccion) return `paso ${i + 1} sin instrucción`
+      if (!esArray(p.opciones, 3) || p.opciones.length !== 3) return `paso ${i + 1}: deben ser exactamente 3 opciones`
+      const correctas = p.opciones.filter((o) => o.correcta === true)
+      if (correctas.length !== 1) return `paso ${i + 1}: debe haber exactamente 1 opción correcta`
+      if (correctas[0].accion !== ruta[i].accion) return `paso ${i + 1}: la opción correcta debe ser "${ruta[i].accion}" (es lo que hace la ruta)`
+    }
+    return null
+  },
   '07-pronunciacion': (a) => {
     if (!esArray(a.items, 3)) return 'menos de 3 items'
     for (const i of a.items) if (!esArray(i.silabas, 1)) return `item ${i.id} sin sílabas`

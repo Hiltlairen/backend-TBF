@@ -27,7 +27,15 @@ let avisoLlaveMostrado = false
  * hay que definir ENCRYPTION_KEY o los datos quedan cifrados con
  * una llave conocida públicamente en este código.
  */
+// La llave se deriva UNA vez por proceso: scryptSync tarda decenas de ms
+// y antes se recalculaba en cada cifrar()/descifrar() — con cientos de
+// resultados, la lista del docente tardaba segundos (prueba de carga, 3.7).
+let llaveCache = null
 function llave() {
+  return (llaveCache ??= derivarLlave())
+}
+
+function derivarLlave() {
   const material = config.encryptionKey?.trim()
   if (!material) {
     if (!avisoLlaveMostrado) {

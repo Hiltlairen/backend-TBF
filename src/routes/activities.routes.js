@@ -22,7 +22,7 @@ import { consumo, estadoIA, callGemini, descripcionModelos } from '../services/g
 import { statsCache, limpiarCache, borrarCache } from '../services/cache.js'
 import {
   ACTIVITY_SCENES, NOTAS_COHERENCIA, elegirEscenario, PREGUNTAS_CONFIG, preguntasDe, cantidadValida,
-  catalogoOrdenadoPorDificultad, catalogoPorFranjas, NIVELES_DIFICULTAD,
+  catalogoOrdenadoPorDificultad, catalogoPorFranjas, catalogoPorTipos, NIVELES_DIFICULTAD,
   SOLO_VOCABULARIO, requiereIA, TIPOS_TEXTO,
 } from '../domain/activityScenes.js'
 import { listarEscenarios, resolverEscenario, INTERACCIONES, PRESENCIAS } from '../domain/scenes.js'
@@ -274,8 +274,14 @@ r.get('/catalogo', requiereAuth, (_req, res) => {
       ...a, escenarioResuelto: resolverEscenario(a.escenario), preguntas: preguntasDe(a.codigo),
     })),
   }))
+  // Por tipo de actividad: el panel los muestra plegados, para no
+  // saturar con las 20 a la vez.
+  const tipos = catalogoPorTipos().map((t) => ({
+    ...t,
+    actividades: t.actividades.map((a) => ({ ...a, escenarioResuelto: resolverEscenario(a.escenario), preguntas: preguntasDe(a.codigo) })),
+  }))
   res.json({
-    catalogo, franjas, nivelesDificultad: NIVELES_DIFICULTAD,
+    catalogo, franjas, tipos, nivelesDificultad: NIVELES_DIFICULTAD,
     notasCoherencia: NOTAS_COHERENCIA, preguntasConfig: PREGUNTAS_CONFIG, tiposTexto: TIPOS_TEXTO,
     ia: estadoIA(),
   })

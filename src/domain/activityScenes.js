@@ -74,17 +74,24 @@ export const ACTIVITY_SCENES = {
     guion: 'Consulta el diccionario del celular junto al estante.',
   },
 
-  '07-pronunciacion': {
-    titulo: 'Pronunciation Guide',
-    escenario: 'estudio_radio',
-    escenariosAlt: ['estacion'],
-    interaccion: 'escucha',
+  // Reemplaza a la antigua 07 (Pronunciation Guide). Las actividades que
+  // ya se guardaron como '07-pronunciacion' se siguen pudiendo abrir.
+  '07-direcciones': {
+    titulo: 'Find the way',
+    nuevo: true,
+    escenario: 'calle',
+    escenariosAlt: ['estacion', 'casa_llamada', 'parque'],
+    interaccion: 'dialogo_remoto',
     presencia: 'remota_audio',
-    dificultad: 2,
+    dificultad: 3,
     destreza: 'escucha',
-    apto: ['refuerzo', 'remediacion'],
-    requiereRevision: true,
-    guion: 'Entra a la cabina; la voz sale del celular. No hay segunda persona visible.',
+    apto: ['troncal', 'refuerzo'],
+    requiereRevision: false,
+    // Ruta REAL de La Paz (domain/rutasMapa.js): la IA solo escribe las
+    // indicaciones y sus 3 opciones, sobre giros y lugares que existen.
+    requiereMapa: true,
+    guion: 'Se sube al auto y en el celular aparece el mapa real de La Paz, con el auto al centro. Según la lección, sigue las indicaciones que le dan o se las da al conductor, hasta llegar (a la casa de la abuela, a la clase de matemáticas…).',
+    formato: 'Una ruta real de 2–6 tramos; en cada esquina 3 opciones (la indicación correcta y dos distractores).',
   },
 
   '13-pedido': {
@@ -393,9 +400,47 @@ export const NIVELES_DIFICULTAD = {
 export const etiquetaDificultad = (n) => NIVELES_DIFICULTAD[n] ?? `Nivel ${n}`
 
 /** Catálogo completo ordenado de menor a mayor dificultad (lo que ya hace el panel del docente). */
+// ============================================================
+// QUÉ HACE EL ESTUDIANTE — una línea por actividad, para el panel
+// ============================================================
+// Lo que ve el docente en cada tarjeta del catálogo (en vez de una
+// animación de muestra): qué hace el estudiante, en una frase.
+export const RESUMEN_ACTIVIDAD = {
+  '01-emparejar':              'Une cada palabra en inglés con su traducción.',
+  '04-sopa-letras':            'Busca las palabras de la lección escondidas en una sopa de letras.',
+  '06-diccionario':            'Traduce oraciones cortas escribiendo la respuesta.',
+  '17-emparejar-imagenes':     'Une cada imagen con su palabra en inglés.',
+  '19-impostor':               'Encuentra la única tarjeta mal traducida entre seis.',
+  '20-basquetbol':             'Lanza al aro eligiendo la traducción correcta entre tres opciones.',
+  '18-armar-escenario':        'Coloca cada objeto en su lugar de la escena y descarta los que no van.',
+  '08-inflexion':              'Cambia la forma de la palabra (plural, pasado, -ing…) siguiendo una regla.',
+  '16-rompecabezas-oracion':   'Arma oraciones encajando las palabras como piezas de rompecabezas.',
+  '15-laberinto-palabras':     'Recorre una cuadrícula pisando las palabras en el orden correcto de la oración.',
+  '13-pedido':                 'Pide en un mostrador eligiendo la frase correcta en cada turno.',
+  '02-conversacion-completar': 'Completa una conversación eligiendo la frase que falta en cada hueco.',
+  '03-conversation-selection': 'Elige la respuesta adecuada en cada turno de un diálogo cara a cara.',
+  '11-indicaciones':           'Ordena los pasos para explicarle a un turista cómo llegar a un lugar.',
+  '12-llamada':                'Contesta una llamada y responde por turnos a quien habla.',
+  '07-direcciones':            'En un mapa real de La Paz, sigue o da indicaciones en inglés para llegar a un lugar.',
+  '14-anuncios':               'Escucha un anuncio (estación, aeropuerto…) y responde preguntas.',
+  '10-canciones':              'Escucha una canción real y escribe las palabras que faltan en la letra.',
+  '09-describir':              'Mira una escena y elige la descripción correcta de lo que ve.',
+  '05-redaccion':              'Escribe un texto corto según una situación; la IA lo evalúa y tú confirmas la nota.',
+}
+
+// Tipos de actividad (por destreza), en el orden en que se muestran.
+// Producción y escritura van juntas: son las dos que piden producir texto.
+export const TIPOS_ACTIVIDAD = [
+  { id: 'vocabulario', etiqueta: 'Vocabulario', icono: '🔤', descripcion: 'Las palabras de la lección y su traducción.', destrezas: ['vocabulario'] },
+  { id: 'gramatica',   etiqueta: 'Gramática',   icono: '🧩', descripcion: 'Formar y transformar oraciones.',             destrezas: ['gramatica'] },
+  { id: 'dialogo',     etiqueta: 'Conversación', icono: '💬', descripcion: 'Diálogos de la vida diaria.',                destrezas: ['dialogo'] },
+  { id: 'escucha',     etiqueta: 'Escucha',     icono: '🎧', descripcion: 'Entender lo que se oye.',                     destrezas: ['escucha'] },
+  { id: 'escritura',   etiqueta: 'Escritura y descripción', icono: '✍️', descripcion: 'Describir y escribir textos propios.', destrezas: ['produccion', 'escritura'] },
+]
+
 export function catalogoOrdenadoPorDificultad() {
   return Object.entries(ACTIVITY_SCENES)
-    .map(([codigo, a]) => ({ codigo, ...a, requiereIA: requiereIA(codigo) }))
+    .map(([codigo, a]) => ({ codigo, ...a, resumen: RESUMEN_ACTIVIDAD[codigo] ?? null, requiereIA: requiereIA(codigo) }))
     .sort((a, b) => a.dificultad - b.dificultad || a.titulo.localeCompare(b.titulo))
 }
 
@@ -408,6 +453,14 @@ export function catalogoPorFranjas() {
     actividades: plano.filter((a) => a.dificultad === n),
   }))
   return franjas.filter((f) => f.actividades.length > 0)
+}
+
+/** Agrupado por tipo de actividad (destreza) y, dentro, de más fácil a más difícil. */
+export function catalogoPorTipos() {
+  const plano = catalogoOrdenadoPorDificultad()
+  return TIPOS_ACTIVIDAD
+    .map(({ destrezas, ...t }) => ({ ...t, actividades: plano.filter((a) => destrezas.includes(a.destreza)) }))
+    .filter((t) => t.actividades.length > 0)
 }
 
 // ============================================================
@@ -429,7 +482,8 @@ export const PREGUNTAS_CONFIG = {
   '05-redaccion':             { configurable: false, min: 1, max: 1,  def: 1, unidad: 'texto',
                                 motivoFijo: 'Es una sola redacción abierta.' },
   '06-diccionario':           { configurable: true,  min: 4, max: 10, def: 6, unidad: 'palabras' },
-  '07-pronunciacion':         { configurable: true,  min: 3, max: 8,  def: 5, unidad: 'palabras' },
+  '07-direcciones':           { configurable: false, min: 1, max: 1,  def: 1, unidad: 'ruta',
+                                motivoFijo: 'La cantidad de indicaciones la fija la ruta: más tramos en los niveles altos del libro.' },
   '08-inflexion':             { configurable: true,  min: 4, max: 10, def: 6, unidad: 'ejercicios' },
   '09-describir':             { configurable: true,  min: 3, max: 8,  def: 4, unidad: 'imágenes' },
   '10-canciones':             { configurable: false, min: 1, max: 1,  def: 1, unidad: 'canción',
@@ -469,8 +523,8 @@ export const NOTAS_COHERENCIA = [
     solucion: 'Se bloqueó con `escenarioObligatorio: true` → siempre karaoke. Sin alternativas.',
   },
   {
-    problema: '07-pronunciacion implicaba "otra persona" pero nunca hay con quién hablar.',
-    solucion: 'Se marcó presencia = remota_audio: la voz sale del celular, no se dibuja NPC.',
+    problema: 'La antigua 07 (pronunciación) implicaba "otra persona" pero nunca había con quién hablar, y no tenía nota.',
+    solucion: 'Se reemplazó por 07-direcciones: un mapa real de La Paz donde se siguen o se dan indicaciones; la voz sale del celular (remota_audio).',
   },
   {
     problema: 'De las 10 actividades originales solo 3 tienen interlocutor, y las 3 son cara a cara. Nunca aparecía el caso "charla por celular" que pediste.',

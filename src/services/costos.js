@@ -21,6 +21,7 @@
 // ============================================================
 import { config } from '../config.js'
 import { ACTIVITY_SCENES } from '../domain/activityScenes.js'
+import { conRutas } from '../domain/rutasMapa.js'
 import { listar } from '../db/store.js'
 import { buildBiblePrompt, buildBatchPrompt } from './prompts.js'
 import { getCache, claveCache } from './cache.js'
@@ -83,7 +84,7 @@ function calibracion() {
 export function estimarGeneracion({ vocabulario, lecciones, nivel, specs: todas, variantes = 1 }) {
   const n = Math.max(1, Math.round(variantes) || 1)
   // La canción (10) no pasa por la IA: no suma tokens.
-  const specs = todas.filter((s) => !ACTIVITY_SCENES[s.codigo]?.requiereCancion)
+  const specs = conRutas(todas.filter((s) => !ACTIVITY_SCENES[s.codigo]?.requiereCancion), { nivel, lecciones })
   if (!specs.length) {
     return {
       entrada: 0, salida: 0, total: 0, costoUSD: 0, desdeCache: false, sinIA: false, local: true, variantes: n, variantesEnCache: 0,

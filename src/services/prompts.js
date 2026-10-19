@@ -19,6 +19,7 @@
 // ============================================================
 
 import { resolverEscenario } from '../domain/scenes.js'
+import { resumenRuta, ESPECIFICIDAD } from '../domain/rutasMapa.js'
 
 /** Agrupa vocabulario por categoría (solo se usa una vez, en el nodo contexto). */
 function vocabBlock(vocabulario) {
@@ -87,7 +88,11 @@ export const MINI_SCHEMAS = {
 
   '06-diccionario': `"06-diccionario": {"actividad":{...meta},"entradas":[{"id":"D1","tipo_entrada":"texto","contenido":"palabra en español","idioma_entrada":"es","respuesta_correcta":"english word","alternativas_aceptadas":[]}]}`,
 
-  '07-pronunciacion': `"07-pronunciacion": {"actividad":{...meta},"items":[{"id":"P1","palabra":"word","silabas":["wo","rd"],"acento":1,"ipa":"/wɜːd/","consejo":"short tip in Spanish"}]}  // sin puntaje`,
+  '07-direcciones': `"07-direcciones": {"actividad":{...meta},"modo":"seguir|dar","destino":{"nombre":"English name of the place, tied to the lesson (e.g. Grandma's house, the math class)","motivo":"one line in Spanish: why we go there"},"guia":"who talks: in 'seguir' the person giving directions (e.g. Mom on the phone); in 'dar' the driver asking","intro":"1-2 English sentences that open the scene","pasos":[{"id":"P1","instruccion":"seguir: the English direction for THIS step | dar: the driver's short English question","opciones":[{"texto":"...","accion":"izquierda|derecha|recto|llegar","correcta":true},{"texto":"...","accion":"...","correcta":false},{"texto":"...","accion":"...","correcta":false}]}],"llegada":"1 English sentence when arriving"}
+  // ONE paso per route step given (same order, same count). The correct option's accion MUST equal that step's turn (LEFT=izquierda, RIGHT=derecha, ARRIVE=llegar).
+  // modo "seguir" (the learner FOLLOWS directions): instruccion = English direction; opciones in SPANISH = what the learner understood ("Seguir 2 cuadras y girar a la izquierda en la farmacia").
+  // modo "dar" (the learner GIVES directions to the driver): instruccion = driver's question; opciones in ENGLISH = direction sentences.
+  // Distractors: wrong turn, wrong number of blocks or wrong landmark — plausible, never absurd. Choose the modo that fits the lesson best (e.g. family → visiting grandma; maths → counting blocks).`,
 
   '08-inflexion': `"08-inflexion": {"actividad":{...meta},"reglas_mostradas":[{"id":"R1","titulo":"Add -ING","ejemplo":"run → running","color":"#ef8312"},{"id":"R2","titulo":"Add -ES / -IES","ejemplo":"wash → washes","color":"#142843"}],"ejercicios":[{"id":"E1","tipo":"completar","instruccion":"Add -ING","regla_id":"R1","plantilla":"She is {blank} her homework.","palabra_base":"do","respuesta_correcta":"doing","pista":"do + ing"}]}  // solo R1 y R2`,
 
@@ -133,6 +138,15 @@ function detalleRedaccion(s) {
     + (tipo ? ` | text_type "${tipo}"` : ' | text_type "choose what fits the scene best"')
 }
 
+// Indicaciones (07): la ruta real (calles, cuadras, lugares) y cuánto
+// detalle dar según el nivel. Los nombres de lugares se copian tal cual.
+function detalleRuta(s) {
+  const nivel = s.nivel ?? 'A2'
+  return ` | city "La Paz, Bolivia" (${s.rutaMapa.zona_nombre})\n  ROUTE (real streets, ${s.rutaMapa.pasos.length} steps):\n  `
+    + resumenRuta(s.rutaMapa).split('\n').join('\n  ')
+    + `\n  DIRECTIONS STYLE (${nivel}): ${ESPECIFICIDAD[nivel] ?? ESPECIFICIDAD.A2} Keep landmark names exactly as given.`
+}
+
 // ── 3. LOTE (la llamada que hace el trabajo pesado) ────────
 /**
  * @param {object} bible  salida del nodo contexto
@@ -141,8 +155,9 @@ function detalleRedaccion(s) {
 export function buildBatchPrompt(bible, specs, variante = 1) {
   const esquemas = specs.map((s) => MINI_SCHEMAS[s.codigo]).filter(Boolean).join('\n\n')
   const pedido = specs.map((s) =>
-    `- ${s.codigo} → ${s.cantidad} items | scene "${s.escenario}" | interaction "${s.interaccion}" | presence "${s.presencia}" | tiempo_limite ${s.tiempo} | penalizacion_por_error ${s.penalizacion}`
+    `- ${s.codigo} → ${s.rutaMapa ? `${s.rutaMapa.pasos.length} pasos` : `${s.cantidad} items`} | scene "${s.escenario}" | interaction "${s.interaccion}" | presence "${s.presencia}" | tiempo_limite ${s.tiempo} | penalizacion_por_error ${s.penalizacion}`
     + (s.codigo === '05-redaccion' ? detalleRedaccion(s) : '')
+    + (s.rutaMapa ? detalleRuta(s) : '')
   ).join('\n')
 
   return `Generate ${specs.length} English activities at once, as ONE JSON object.
@@ -176,7 +191,7 @@ STORY BIBLE:
 ${JSON.stringify({ lexico: bible.lexico, lexico_verbos: bible.lexico_verbos, npc: bible.npc, nivel: bible.nivel })}
 
 Regenerate ONLY that activity: ${spec.cantidad} items, scene "${spec.escenario}",
-tiempo_limite ${spec.tiempo}, penalizacion_por_error ${spec.penalizacion}.
+tiempo_limite ${spec.tiempo}, penalizacion_por_error ${spec.penalizacion}.${spec.rutaMapa ? `\n${detalleRuta(spec)}` : ''}
 
 ${META_SPEC}
 
