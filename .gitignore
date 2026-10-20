@@ -5,8 +5,11 @@ dist
 
 # Datos y respaldos: NUNCA al repositorio (usuarios, estudiantes,
 # resultados). En producción los datos viven en Postgres.
-data/
-data-e2e/
-backups/
+# Con "/" al inicio: solo las carpetas de la RAÍZ del servidor. Sin ella,
+# "data/" también ignoraba src/domain/data/ (las rutas de La Paz de la
+# actividad 07) y el deploy fallaba por no encontrar rutasLaPaz.json.
+/data/
+/data-e2e/
+/backups/
 # Backups viejos que quedaron en la raíz (BACKUP_DIR vacío)
 20[0-9][0-9]-*T*Z/

@@ -9,7 +9,19 @@
 // ============================================================
 import { readFileSync } from 'node:fs'
 
-const DATOS = JSON.parse(readFileSync(new URL('./data/rutasLaPaz.json', import.meta.url), 'utf8'))
+// Si el archivo falta (p. ej. quedó fuera del repositorio), el servidor
+// arranca igual: solo la actividad 07 no se puede generar (sin rutas, la
+// validación la rechaza con "falta la ruta del mapa").
+function cargarRutas() {
+  try {
+    return JSON.parse(readFileSync(new URL('./data/rutasLaPaz.json', import.meta.url), 'utf8'))
+  } catch (e) {
+    // console (no el logger): este módulo de dominio no debe cargar config.js.
+    console.error(`[rutasMapa] no se pudo leer data/rutasLaPaz.json (${e.message}): la actividad 07 queda sin rutas`)
+    return { fuente: '© OpenStreetMap contributors', rutas: [] }
+  }
+}
+const DATOS = cargarRutas()
 export const FUENTE_MAPA = DATOS.fuente
 export const RUTAS = DATOS.rutas
 
