@@ -147,4 +147,24 @@ describe('07 · generar y jugar', () => {
     expect(res.body.puntaje).toBe(Math.round(((n - 1) / n) * 100) - 1)   // −10 pts por error / 10
     expect(res.body.requiereRevision).toBe(false)
   })
+
+  it('sin botón: hasta 2 intentos por esquina; cada error resta y solo valen opciones reales', async () => {
+    const sala = await request(app).post('/api/rooms').set('Authorization', `Bearer ${tokDoc}`).send({ modo: 'simple', actividadId: gen.body.actividad.id })
+    const inv = await request(app).post('/api/auth/invitado').send({ codigo: sala.body.sala.codigo, codigoMatricula: clase.codigos[1] })
+    const inicio = await request(app).post('/api/game/iniciar').set('Authorization', `Bearer ${inv.body.token}`).send({ codigo: sala.body.sala.codigo })
+    const pasos = inicio.body.actividad.contenido.pasos
+    const bien = (p) => p.opciones.find((o) => o.correcta).texto
+    const mal = (p, k = 0) => p.opciones.filter((o) => !o.correcta)[k].texto
+    const items = pasos.map((p, i) => ({
+      i,
+      elegidas: i === 0 ? [mal(p), bien(p)]          // acierta al 2do intento → 1 error
+        : i === 1 ? [mal(p, 0), mal(p, 1)]            // falla 2 veces → no resuelta, 2 errores
+          : ['texto inventado', bien(p)],             // lo inventado no cuenta
+    }))
+    const res = await request(app).post('/api/game/entregar-simple').set('Authorization', `Bearer ${inicio.body.token}`)
+      .send({ partidaId: inicio.body.partidaId, respuestas: { items } })
+    const n = pasos.length
+    // resueltas: todas menos la 2da; errores: 3 → −3 pts
+    expect(res.body.puntaje).toBe(Math.round(((n - 1) / n) * 100) - 3)
+  })
 })

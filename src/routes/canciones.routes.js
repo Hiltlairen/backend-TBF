@@ -4,7 +4,9 @@
 // Lo que usa el panel del docente para armar "completar la letra":
 //   GET  /buscar?titulo=&artista=  → canciones encontradas
 //   GET  /:fuente/:id              → la letra en versos + estribillo detectado
-//   POST /vista-previa             → cómo queda la letra con huecos
+//   POST /vista-previa             → cómo queda la letra con huecos; en modo
+//                                    'vocabulario' además busca en la letra las
+//                                    palabras de las lecciones y dice cuáles halló
 // La actividad en sí se genera en POST /api/activities/generar(-ruta),
 // con la canción elegida en la configuración de la actividad.
 // ============================================================
@@ -13,8 +15,10 @@ import { z } from 'zod'
 import { requiereAuth, requiereRol } from '../middleware/auth.js'
 import { validar } from '../middleware/validar.js'
 import { buscarCanciones, obtenerCancion } from '../services/canciones.js'
-import { armarActividadCancion, detectarEstribillo, normalizarAudio, porcentajeDeNivel, TIPOS_HUECO } from '../domain/cancionHuecos.js'
-import { leccionPorId, libros } from '../db/store.js'
+import { armarActividadCancion, coincidenciasVocabulario, detectarEstribillo, normalizarAudio, MODOS_HUECO, MAX_HUECOS } from '../domain/cancionHuecos.js'
+import { leccionPorId, libros, vocabularioCompleto } from '../db/store.js'
+import { vocabularioDeBD } from '../db/pg.js'
+import { tieneDB } from '../config.js'
 import { logger } from '../services/logger.js'
 
 const r = Router()
@@ -25,6 +29,15 @@ const SIN_SERVICIO = 'El servicio de letras no responde ahora. Inténtalo de nue
 function nivelDe(leccionesIds = []) {
   const l = leccionPorId(leccionesIds[0])
   return libros().find((b) => b.id === l?.book_id)?.nivel ?? 'A2'
+}
+
+/** Vocabulario de las lecciones (Postgres si hay, si no el store). */
+async function vocabularioDe(leccionesIds) {
+  if (tieneDB()) {
+    const deBD = await vocabularioDeBD(leccionesIds).catch(() => null)
+    if (deBD?.length) return deBD
+  }
+  return vocabularioCompleto(leccionesIds)
 }
 
 r.get('/buscar', ...docentes, async (req, res) => {
@@ -59,12 +72,14 @@ export const configCancionSchema = z.object({
   id: z.string().trim().min(1).max(40),
   audio: z.object({ tipo: z.string(), ref: z.string().max(500) }),
   opciones: z.object({
-    minLetras: z.number().int().min(1).max(10).optional(),
-    tipo: z.enum(TIPOS_HUECO).optional(),
     tramo: z.union([
       z.enum(['completa', 'estribillo']),
       z.object({ desde: z.number().int().min(0), hasta: z.number().int().min(0) }),
     ]).optional(),
+    // manual: las elige el docente · vocabulario: las halló el sistema (y se pueden ajustar)
+    modo: z.enum(MODOS_HUECO).optional(),
+    // "verso:palabra" de la letra original
+    seleccion: z.array(z.string().regex(/^\d{1,4}:\d{1,3}$/)).max(MAX_HUECOS).optional(),
   }).optional(),
 })
 
@@ -79,8 +94,17 @@ r.post('/vista-previa', ...docentes, validar(z.object({
     const c = await obtenerCancion(cfg.fuente, cfg.id)
     if (!c) return res.status(404).json({ error: 'No se encontró la letra de esa canción.' })
     const nivel = nivelDe(lecciones)
-    const actividad = armarActividadCancion({ cancion: c, audio, opciones: cfg.opciones, nivel })
-    res.json({ actividad, nivel, porcentaje: porcentajeDeNivel(nivel) })
+    const opciones = { ...cfg.opciones }
+    // Modo vocabulario: se buscan en el tramo las palabras de las lecciones.
+    let vocabulario = null
+    if (opciones.modo === 'vocabulario') {
+      const ids = lecciones.map((x) => (Number.isNaN(Number(x)) ? x : Number(x)))
+      const r = coincidenciasVocabulario(c.lineas, opciones.tramo ?? 'completa', await vocabularioDe(ids))
+      opciones.seleccion = r.seleccion
+      vocabulario = { buscadas: r.buscadas, encontradas: r.encontradas, lecciones: ids.map((id) => leccionPorId(id)?.numero).filter(Boolean) }
+    }
+    const actividad = armarActividadCancion({ cancion: c, audio, opciones, nivel })
+    res.json({ actividad, nivel, seleccion: opciones.seleccion ?? [], vocabulario })
   } catch (e) {
     logger.warn({ err: e.message }, '[canciones] vista previa falló')
     res.status(503).json({ error: SIN_SERVICIO })

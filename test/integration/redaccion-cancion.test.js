@@ -14,7 +14,7 @@ import { instalarGeminiMock, actividadEmparejar } from '../helpers/geminiMock.mj
 // OJO: nada de src/ se importa arriba. services/canciones.js carga
 // config.js, y config.js lee el .env al importarse: tiene que ser DESPUÉS
 // de crearAppDePrueba() (si no, el test usa la carpeta data/ real).
-let generarHuecos, detectarEstribillo, normalizarAudio, parsearLrc, parsearTextoPlano
+let generarHuecos, detectarEstribillo, normalizarAudio, coincidenciasVocabulario, parsearLrc, parsearTextoPlano
 
 const LRC = [
   '[00:10.00]Look at the stars, look how they shine for you',
@@ -43,7 +43,10 @@ const REDACCION = (codigo) => ({
 let ctx, app, tokDoc, mock, clase, llamadasLrclib = 0
 const auth = () => ({ Authorization: `Bearer ${tokDoc}` })
 const prompts = () => mock.llamadas.prompts
-const cancionCfg = { fuente: 'lrclib', id: '123', audio: { tipo: 'youtube', ref: 'https://www.youtube.com/watch?v=yKNxeF4KMsY' } }
+const cancionCfg = {
+  fuente: 'lrclib', id: '123', audio: { tipo: 'youtube', ref: 'https://www.youtube.com/watch?v=yKNxeF4KMsY' },
+  opciones: { modo: 'manual', tramo: 'completa', seleccion: ['0:3', '0:7', '1:8'] },
+}
 
 async function entrar(codigoSala) {
   const inv = await request(app).post('/api/auth/invitado').send({ codigo: codigoSala, codigoMatricula: clase.codigos.shift() })
@@ -57,7 +60,7 @@ const lanzar = async (actividadId) =>
 beforeAll(async () => {
   ctx = await crearAppDePrueba()
   app = ctx.app
-  ;({ generarHuecos, detectarEstribillo, normalizarAudio } = await import('../../src/domain/cancionHuecos.js'))
+  ;({ generarHuecos, detectarEstribillo, normalizarAudio, coincidenciasVocabulario } = await import('../../src/domain/cancionHuecos.js'))
   ;({ parsearLrc, parsearTextoPlano } = await import('../../src/services/canciones.js'))
   tokDoc = await loginComo(app, 'docente')
   clase = await crearClase(app, { nombre: 'Canciones', estudiantes: 8 })
@@ -91,25 +94,30 @@ describe('10 · letra con huecos (dominio)', () => {
     expect(parsearTextoPlano('[Chorus]\nHello there\n\nVerse 2:\nGoodbye')).toEqual([{ t: null, texto: 'Hello there' }, { t: null, texto: 'Goodbye' }])
   })
 
-  it('oculta el % pedido, solo palabras del largo mínimo, y cada variante oculta otras', () => {
-    const a = generarHuecos({ lineas, porcentaje: 30, minLetras: 4, variante: 1 })
-    const b = generarHuecos({ lineas, porcentaje: 30, minLetras: 4, variante: 2 })
-    expect(a.huecos.length).toBe(Math.round(0.3 * a.totalPalabras))
-    expect(a.huecos.every((h) => h.respuesta.replace(/'/g, '').length >= 4)).toBe(true)
-    expect(a.huecos.map((h) => h.respuesta)).not.toEqual(b.huecos.map((h) => h.respuesta))
+  it('oculta exactamente las palabras que eligió el docente ("verso:palabra")', () => {
+    const r = generarHuecos({ lineas, seleccion: ['0:3', '0:7', '1:8'] })
+    expect(r.huecos.map((h) => h.respuesta)).toEqual(['stars', 'shine', 'yellow'])
     // La letra se puede reconstruir: texto + respuestas = verso original.
-    const verso = a.lineas[0].partes.map((p) => (p.hueco ? a.huecos.find((h) => h.id === p.hueco).respuesta : p.texto)).join('')
+    const verso = r.lineas[0].partes.map((p) => (p.hueco ? r.huecos.find((h) => h.id === p.hueco).respuesta : p.texto)).join('')
     expect(verso).toBe(lineas[0].texto)
+    expect(generarHuecos({ lineas, seleccion: [] }).huecos).toHaveLength(0)   // nada al azar
   })
 
-  it('verbos y sustantivos; estribillo y rango de versos', () => {
-    const verbos = generarHuecos({ lineas, porcentaje: 50, minLetras: 3, tipo: 'verbos' })
-    expect(verbos.huecos.map((h) => h.respuesta.toLowerCase())).toEqual(expect.arrayContaining(['look']))
-    expect(verbos.huecos.map((h) => h.respuesta.toLowerCase())).not.toContain('stars')
+  it('el tramo recorta: estribillo, rango de versos, y lo elegido fuera del tramo no cuenta', () => {
     expect(detectarEstribillo(lineas)).toEqual({ desde: 0, hasta: 1 })
-    const coro = generarHuecos({ lineas, porcentaje: 30, tramo: 'estribillo' })
-    expect(coro.lineas).toHaveLength(2)
-    expect(generarHuecos({ lineas, porcentaje: 30, tramo: { desde: 2, hasta: 4 } }).lineas).toHaveLength(3)
+    expect(generarHuecos({ lineas, seleccion: ['0:3'], tramo: 'estribillo' }).lineas).toHaveLength(2)
+    const rango = generarHuecos({ lineas, seleccion: ['0:3', '3:1'], tramo: { desde: 2, hasta: 4 } })
+    expect(rango.lineas).toHaveLength(3)
+    expect(rango.huecos.map((h) => h.respuesta)).toEqual(['all'])
+  })
+
+  it('modo vocabulario: halla las palabras de la lección (plural, sin artículos ni "to") y dice cuáles', () => {
+    const r = coincidenciasVocabulario(lineas, 'completa', [{ ingles: 'Star' }, { ingles: 'a song' }, { ingles: 'to shine' }, { ingles: 'Notebook' }])
+    expect(r.buscadas).toBe(4)
+    expect(r.encontradas).toEqual(expect.arrayContaining([{ palabra: 'star', veces: 2 }, { palabra: 'shine', veces: 2 }, { palabra: 'song', veces: 1 }]))
+    expect(generarHuecos({ lineas, seleccion: r.seleccion }).huecos.map((h) => h.respuesta.toLowerCase()).sort())
+      .toEqual(['shine', 'shine', 'song', 'stars', 'stars'])
+    expect(coincidenciasVocabulario(lineas, 'completa', [{ ingles: 'Calculator' }]).seleccion).toEqual([])
   })
 
   it('acepta los enlaces tal como los copia el docente', () => {
@@ -123,16 +131,37 @@ describe('10 · generar y jugar', () => {
   let gen
   beforeAll(async () => {
     gen = await request(app).post('/api/activities/generar').set(auth())
-      .send({ codigo: '10-canciones', lecciones: [1], claseId: clase.claseId, config: { cancion: { ...cancionCfg, opciones: { minLetras: 3 } } } })
+      .send({ codigo: '10-canciones', lecciones: [1], claseId: clase.claseId, config: { cancion: cancionCfg } })
   })
 
-  it('el panel busca canciones y ve la vista previa con el % del libro', async () => {
+  it('el panel busca canciones y ve la vista previa con las palabras elegidas a mano', async () => {
     const busqueda = await request(app).get('/api/canciones/buscar?titulo=Yellow&artista=Coldplay').set(auth())
     expect(busqueda.body.resultados[0]).toMatchObject({ fuente: 'lrclib', id: '123', titulo: 'Yellow', sincronizada: true, duracionTexto: '4:26' })
     const previa = await request(app).post('/api/canciones/vista-previa').set(auth()).send({ cancion: cancionCfg, lecciones: [1] })
     expect(previa.status).toBe(200)
-    expect(previa.body.actividad.huecos.length).toBeGreaterThan(0)
-    expect(previa.body.porcentaje).toBe(previa.body.actividad.opciones.porcentaje)
+    expect(previa.body.actividad.huecos.map((h) => h.respuesta)).toEqual(['stars', 'shine', 'yellow'])
+  })
+
+  it('modo vocabulario: busca las palabras de la lección y dice cuáles encontró (sin frases ni palabras comunes)', async () => {
+    // Lección 1: útiles, países, adjetivos ("Beautiful") y frases del aula
+    // ("How do you say ___ in English?"). De las frases NO salen "how", "you", "do".
+    const previa = await request(app).post('/api/canciones/vista-previa').set(auth())
+      .send({ cancion: { ...cancionCfg, opciones: { modo: 'vocabulario', tramo: 'completa' } }, lecciones: [1] })
+    expect(previa.status).toBe(200)
+    expect(previa.body.vocabulario.encontradas).toEqual([{ palabra: 'beautiful', veces: 1 }])
+    expect(previa.body.actividad.huecos.map((h) => h.respuesta)).toEqual(['beautiful'])
+    // En el estribillo no está: sin coincidencias, para que el panel pase a manual
+    const coro = await request(app).post('/api/canciones/vista-previa').set(auth())
+      .send({ cancion: { ...cancionCfg, opciones: { modo: 'vocabulario', tramo: 'estribillo' } }, lecciones: [1] })
+    expect(coro.body.seleccion).toEqual([])
+    expect(coro.body.vocabulario.buscadas).toBeGreaterThan(5)
+  })
+
+  it('con canción pero sin palabras elegidas no se genera (400 con un mensaje claro)', async () => {
+    const res = await request(app).post('/api/activities/generar').set(auth())
+      .send({ codigo: '10-canciones', lecciones: [1], claseId: clase.claseId, config: { cancion: { ...cancionCfg, opciones: { modo: 'manual', seleccion: [] } } } })
+    expect(res.status).toBe(400)
+    expect(res.body.error).toMatch(/al menos una palabra/)
   })
 
   it('sin canción elegida no se genera (400)', async () => {

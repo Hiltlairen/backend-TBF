@@ -68,6 +68,9 @@ async function prepararCanciones(specs) {
     const falla = (msg, status = 400) => { const e = new Error(msg); e.status = status; throw e }
     const cfg = configCancionSchema.safeParse(s.cancionCfg)
     if (!cfg.success) falla(`"${ACTIVITY_SCENES[s.codigo].titulo}": elige la canción y de dónde sale el audio.`)
+    if (!cfg.data.opciones?.seleccion?.length) {
+      falla(`"${ACTIVITY_SCENES[s.codigo].titulo}": elige al menos una palabra de la letra para ocultar (a mano o con el vocabulario de la lección).`)
+    }
     try { s.audio = normalizarAudio(cfg.data.audio) } catch (e) { falla(e.message) }
     let cancion
     try { cancion = await obtenerCancion(cfg.data.fuente, cfg.data.id) } catch {

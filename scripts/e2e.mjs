@@ -90,7 +90,10 @@ const LETRA = { id: 77, trackName: 'Morning Light', artistName: 'Original', albu
     '[00:05.00]Open the window and read your book', '[00:10.00]Morning light is coming home',
     '[00:15.00]Open the window and read your book', '[00:20.00]Morning light is coming home',
   ].join('\n') }
-const CANCION = { fuente: 'lrclib', id: '77', audio: { tipo: 'youtube', ref: 'https://youtu.be/dQw4w9WgXcQ' } }
+const CANCION = {
+  fuente: 'lrclib', id: '77', audio: { tipo: 'youtube', ref: 'https://youtu.be/dQw4w9WgXcQ' },
+  opciones: { modo: 'manual', seleccion: ['0:2', '0:6', '1:1'] },   // window, book, light
+}
 
 const BIBLE = {
   tema: 'A day in the city', protagonista: 'Ana', npc: 'Tom', nivel: 'A2',

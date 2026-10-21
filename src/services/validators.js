@@ -126,7 +126,7 @@ const REGLAS = {
     if (!a.cancion?.titulo) return 'falta la canción'
     if (!['youtube', 'spotify', 'url'].includes(a.audio?.tipo) || !a.audio?.ref) return 'falta la fuente de audio'
     if (!esArray(a.lineas, 1)) return 'la letra no tiene versos'
-    if (!esArray(a.huecos, 1)) return 'no quedó ninguna palabra para completar (prueba otro tramo o un largo mínimo menor)'
+    if (!esArray(a.huecos, 1)) return 'no hay ninguna palabra para completar: elige al menos una palabra de la letra (o usa el vocabulario de la lección)'
     const enLetra = new Set(a.lineas.flatMap((l) => (l.partes ?? []).filter((p) => p.hueco).map((p) => p.hueco)))
     for (const h of a.huecos) if (!h.respuesta || !enLetra.has(h.id)) return `hueco ${h.id} inválido`
     return null

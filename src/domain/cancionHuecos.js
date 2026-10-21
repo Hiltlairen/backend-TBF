@@ -2,26 +2,22 @@
 // cancionHuecos.js — Letra con huecos (actividad 10, sin IA)
 // ============================================================
 // De una letra (versos con su tiempo, si es sincronizada) arma el
-// ejercicio "escucha y completa": oculta un porcentaje de palabras y
-// deja un hueco editable en su lugar. Todo es determinista y gratis:
-//   · El PORCENTAJE lo fija el libro (su nivel), no el docente.
-//   · El docente elige: largo mínimo de la palabra, qué ocultar
-//     (aleatorias, verbos o sustantivos) y qué tramo (toda la canción,
-//     el estribillo o un rango de versos).
-//   · Cada VARIANTE oculta otras palabras (semilla = número de variante):
-//     dos compañeros no tienen los mismos huecos.
-// Verbos y sustantivos se distinguen con `compromise` (análisis
-// gramatical del inglés que corre en el servidor, sin IA).
+// ejercicio "escucha y completa". Los huecos los decide el DOCENTE:
+//   · modo 'manual'      → toca en la letra las palabras a ocultar;
+//   · modo 'vocabulario' → el sistema busca en la letra las palabras del
+//     vocabulario de las lecciones elegidas (y el docente puede ajustar).
+// Siempre dentro del tramo elegido (toda la canción, el estribillo o un
+// rango de versos). Nada de ocultar verbos o tiempos al azar.
+//
+// Cada palabra se identifica con "verso:palabra" — índice del verso en
+// la letra original y orden de la palabra dentro del verso (contando
+// con PALABRA, la misma expresión que usa el panel del docente).
 // ============================================================
-import nlp from 'compromise'
 
-/** Porcentaje de palabras ocultas según el nivel del libro. */
-export const PORCENTAJE_POR_NIVEL = { A1: 30, A2: 40, B1: 50, B2: 50 }
-export const porcentajeDeNivel = (nivel) => PORCENTAJE_POR_NIVEL[nivel] ?? 40
-
-export const TIPOS_HUECO = ['aleatorio', 'verbos', 'sustantivos']
 export const TIPOS_AUDIO = ['youtube', 'spotify', 'url']
-const PALABRA = /[A-Za-z][A-Za-z']*/g
+export const MODOS_HUECO = ['manual', 'vocabulario']
+export const PALABRA = /[A-Za-z][A-Za-z\u2019']*/g
+export const MAX_HUECOS = 300
 
 // ── Audio ───────────────────────────────────────────────────
 /**
@@ -90,93 +86,94 @@ export function indicesDelTramo(lineas, tramo) {
   return todos.slice(desde, hasta + 1)
 }
 
-// ── Azar reproducible ───────────────────────────────────────
-function semillaDe(...partes) {
-  let h = 2166136261
-  for (const c of partes.join('|')) { h ^= c.charCodeAt(0); h = Math.imul(h, 16777619) }
-  return h >>> 0
-}
-function generador(semilla) {   // mulberry32
-  let a = semilla
-  return () => {
-    a |= 0; a = (a + 0x6D2B79F5) | 0
-    let t = Math.imul(a ^ (a >>> 15), 1 | a)
-    t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
-const barajar = (lista, azar) => {
-  const a = [...lista]
-  for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(azar() * (i + 1)); [a[i], a[j]] = [a[j], a[i]] }
-  return a
-}
-
-/** Palabras de un verso con su posición y si son verbo / sustantivo. */
+/** Palabras de un verso con su posición (mismo orden que en el panel). */
 function palabrasDe(texto) {
-  const palabras = [...texto.matchAll(PALABRA)].map((m) => ({ texto: m[0], ini: m.index, fin: m.index + m[0].length }))
-  // compromise etiqueta términos; se emparejan por orden con las palabras.
-  const terminos = nlp(texto).json()[0]?.terms ?? []
-  const etiquetas = terminos.map((t) => ({ texto: String(t.text).replace(/[^A-Za-z']/g, ''), tags: t.tags ?? [] }))
-  let k = 0
-  for (const p of palabras) {
-    while (k < etiquetas.length && etiquetas[k].texto.toLowerCase() !== p.texto.toLowerCase()) k++
-    const tags = etiquetas[k]?.tags ?? []
-    p.verbo = tags.includes('Verb')
-    p.sustantivo = tags.includes('Noun') && !tags.includes('Pronoun')
-    if (k < etiquetas.length) k++
-  }
-  return palabras
+  return [...String(texto).matchAll(PALABRA)].map((m) => ({ texto: m[0], ini: m.index, fin: m.index + m[0].length }))
 }
+const clave = (verso, palabra) => `${verso}:${palabra}`
+const normal1 = (w) => String(w).toLowerCase().replace(/[\u2019']/g, "'")
 
-const letras = (palabra) => palabra.replace(/'/g, '').length
+// Palabras muy comunes que nunca se ocultan aunque aparezcan en una entrada
+// del vocabulario: artículos, pronombres, auxiliares, preposiciones…
+const VACIAS = new Set(`a an the to of and or but so if as at in on for with from by up out
+  i you he she it we they me him us them my your his her its our their this that these those
+  is are am was were be been do does did have has had can will would may might must shall should
+  how what where when who why which there here not no yes very too also all just`.split(/\s+/))
 
 /**
- * Arma la letra con huecos.
- * @param {object} p
- * @param {Array<{t:number|null, texto:string}>} p.lineas  versos de la canción
- * @param {number} p.porcentaje   % de palabras a ocultar (lo fija el libro)
- * @param {number} [p.minLetras]  solo palabras de al menos esta cantidad de letras
- * @param {'aleatorio'|'verbos'|'sustantivos'} [p.tipo]
- * @param {'completa'|'estribillo'|{desde:number,hasta:number}} [p.tramo]
- * @param {number} [p.variante]   cambia qué palabras se ocultan
- * @returns {{ lineas: Array, huecos: Array<{id, respuesta, linea}>, totalPalabras: number }}
+ * Palabras de la letra (dentro del tramo) que coinciden con el vocabulario.
+ * Compara palabra por palabra, sin mayúsculas, y acepta plural / 's
+ * ("friends", "friend's" → friend). De cada entrada del vocabulario se
+ * toman sus palabras sueltas, sin artículos ni palabras comunes ("to read" → read). Las frases enteras del vocabulario no
+ * cuentan como palabras clave.
+ * @returns {{ seleccion: string[], encontradas: {palabra, veces}[], buscadas: number }}
  */
-export function generarHuecos({ lineas, porcentaje, minLetras = 4, tipo = 'aleatorio', tramo = 'completa', variante = 1 }) {
-  const azar = generador(semillaDe(variante, lineas.map((l) => l.texto).join('\n')))
-  const indices = indicesDelTramo(lineas, tramo)
-
-  const versos = indices.map((i, k) => ({ id: `L${k + 1}`, t: lineas[i].t ?? null, texto: lineas[i].texto, palabras: palabrasDe(lineas[i].texto) }))
-  const totalPalabras = versos.reduce((n, v) => n + v.palabras.length, 0)
-  const apta = (p) => letras(p.texto) >= minLetras && (tipo === 'verbos' ? p.verbo : tipo === 'sustantivos' ? p.sustantivo : true)
-
-  // Repartidas entre versos: por turnos, cada verso (en orden al azar)
-  // aporta una palabra al azar, hasta llegar a la cantidad pedida.
-  const porVerso = barajar(versos.map((v, vi) => barajar(v.palabras.map((p, pi) => ({ vi, pi })).filter(({ pi }) => apta(v.palabras[pi])), azar)), azar)
-  const candidatas = porVerso.reduce((n, c) => n + c.length, 0)
-  const objetivo = Math.min(candidatas, Math.max(candidatas ? 1 : 0, Math.round((porcentaje / 100) * totalPalabras)))
-  const elegidas = new Set()
-  while (elegidas.size < objetivo) {
-    for (const cola of porVerso) {
-      if (elegidas.size >= objetivo) break
-      const sig = cola.shift()
-      if (sig) elegidas.add(`${sig.vi}:${sig.pi}`)
+export function coincidenciasVocabulario(lineas, tramo, vocabulario = []) {
+  const buscadas = new Set()
+  for (const v of vocabulario) {
+    // "Brazil / Brazilian" son dos entradas; las frases del aula ("How do you
+    // say ___ in English?", "Can you repeat, please?") son expresiones, no
+    // palabras clave: se saltan (si no, se ocultaría "you", "how", "do"…).
+    for (const alt of String(v.ingles ?? v.en ?? '').split('/')) {
+      const t = alt.trim()
+      if (!t || /[?!.,]|_{2,}/.test(t) || t.split(/\s+/).length >= 3) continue
+      for (const w of t.toLowerCase().split(/[^a-z']+/)) {
+        if (w.length >= 2 && !VACIAS.has(w)) buscadas.add(w)
+      }
     }
   }
+  const raiz = (w) => {
+    const n = normal1(w).replace(/'s$/, '')
+    if (buscadas.has(n)) return n
+    if (n.endsWith('es') && buscadas.has(n.slice(0, -2))) return n.slice(0, -2)
+    if (n.endsWith('s') && buscadas.has(n.slice(0, -1))) return n.slice(0, -1)
+    return null
+  }
+  const seleccion = []
+  const veces = new Map()
+  for (const vi of indicesDelTramo(lineas, tramo)) {
+    palabrasDe(lineas[vi].texto).forEach((p, pi) => {
+      const r = raiz(p.texto)
+      if (!r) return
+      seleccion.push(clave(vi, pi))
+      veces.set(r, (veces.get(r) ?? 0) + 1)
+    })
+  }
+  return {
+    seleccion: seleccion.slice(0, MAX_HUECOS),
+    encontradas: [...veces].map(([palabra, n]) => ({ palabra, veces: n })).sort((a, b) => b.veces - a.veces),
+    buscadas: buscadas.size,
+  }
+}
 
+/**
+ * Arma la letra con huecos: oculta las palabras elegidas que caen en el tramo.
+ * @param {object} p
+ * @param {Array<{t:number|null, texto:string}>} p.lineas  versos de la canción
+ * @param {string[]} p.seleccion  claves "verso:palabra" a ocultar
+ * @param {'completa'|'estribillo'|{desde:number,hasta:number}} [p.tramo]
+ * @returns {{ lineas: Array, huecos: Array<{id, respuesta, linea}>, totalPalabras: number }}
+ */
+export function generarHuecos({ lineas, seleccion = [], tramo = 'completa' }) {
+  const elegidas = new Set(seleccion)
   const huecos = []
-  const salida = versos.map((v, vi) => {
+  let totalPalabras = 0
+  const salida = indicesDelTramo(lineas, tramo).map((vi, k) => {
+    const id = `L${k + 1}`
+    const texto = lineas[vi].texto
     const partes = []
     let cursor = 0
-    v.palabras.forEach((p, pi) => {
-      if (!elegidas.has(`${vi}:${pi}`)) return
-      if (p.ini > cursor) partes.push({ texto: v.texto.slice(cursor, p.ini) })
-      const id = `H${huecos.length + 1}`
-      huecos.push({ id, respuesta: p.texto, linea: v.id })
-      partes.push({ hueco: id })
+    palabrasDe(texto).forEach((p, pi) => {
+      totalPalabras++
+      if (!elegidas.has(clave(vi, pi))) return
+      if (p.ini > cursor) partes.push({ texto: texto.slice(cursor, p.ini) })
+      const hid = `H${huecos.length + 1}`
+      huecos.push({ id: hid, respuesta: p.texto, linea: id })
+      partes.push({ hueco: hid })
       cursor = p.fin
     })
-    if (cursor < v.texto.length) partes.push({ texto: v.texto.slice(cursor) })
-    return { id: v.id, t: v.t, partes }
+    if (cursor < texto.length) partes.push({ texto: texto.slice(cursor) })
+    return { id, t: lineas[vi].t ?? null, partes }
   })
   return { lineas: salida, huecos, totalPalabras }
 }
@@ -185,12 +182,11 @@ export function generarHuecos({ lineas, porcentaje, minLetras = 4, tipo = 'aleat
  * Contenido completo de la actividad 10 a partir de la canción ya
  * descargada (services/canciones.js) y la configuración del docente.
  */
-export function armarActividadCancion({ cancion, audio, opciones = {}, nivel = 'A2', spec = {}, variante = 1 }) {
-  const porcentaje = porcentajeDeNivel(nivel)
-  const tipo = TIPOS_HUECO.includes(opciones.tipo) ? opciones.tipo : 'aleatorio'
-  const minLetras = Math.max(1, Math.min(10, Number(opciones.minLetras) || 4))
+export function armarActividadCancion({ cancion, audio, opciones = {}, nivel = 'A2', spec = {} }) {
   const tramo = opciones.tramo ?? 'completa'
-  const { lineas, huecos, totalPalabras } = generarHuecos({ lineas: cancion.lineas, porcentaje, minLetras, tipo, tramo, variante })
+  const modo = MODOS_HUECO.includes(opciones.modo) ? opciones.modo : 'manual'
+  const seleccion = Array.isArray(opciones.seleccion) ? opciones.seleccion.slice(0, MAX_HUECOS) : []
+  const { lineas, huecos, totalPalabras } = generarHuecos({ lineas: cancion.lineas, seleccion, tramo })
   return {
     actividad: {
       id: '10-canciones',
@@ -209,7 +205,7 @@ export function armarActividadCancion({ cancion, audio, opciones = {}, nivel = '
       duracion: cancion.duracion ?? null, sincronizada: Boolean(cancion.sincronizada),
     },
     audio,
-    opciones: { porcentaje, minLetras, tipo, tramo },
+    opciones: { modo, tramo },
     total_palabras: totalPalabras,
     lineas,
     huecos,

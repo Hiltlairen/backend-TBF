@@ -149,6 +149,40 @@ function calificarCancion(d, r) {
   return { puntaje: pct(intentos.filter((x) => x.ok).length, intentos.length), intentos }
 }
 
+// Indicaciones (07): sin botón "Comprobar", hasta 2 intentos por esquina.
+// Llega { items: [{ i, elegidas: [texto, …] }] } (o el formato viejo
+// { i, opcion }). Solo cuentan textos que SON opciones de esa esquina.
+//   acierto  = eligió la correcta dentro de los 2 intentos
+//   errores  = cada opción equivocada que tocó (suman penalización)
+function calificarDirecciones(d, r, penalizacion) {
+  const resp = porIndice(r?.items)
+  let errores = 0
+  const intentos = lista(d.pasos).map((p, i) => {
+    const opciones = lista(p.opciones)
+    const correcta = opciones.find((o) => o.correcta === true)
+    const dada = resp.get(i)
+    const crudas = Array.isArray(dada?.elegidas) ? dada.elegidas : dada?.opcion != null ? [dada.opcion] : []
+    const validas = [...new Set(crudas.map(String))]
+      .filter((t) => opciones.some((o) => normalizarTexto(o.texto) === normalizarTexto(t)))
+      .slice(0, 2)
+    const esCorrecta = (t) => normalizarTexto(t) === normalizarTexto(correcta?.texto)
+    const fallos = validas.filter((t) => !esCorrecta(t)).length
+    errores += fallos
+    return {
+      pregunta: p.instruccion ?? null, esperado: correcta?.texto ?? null,
+      respondio: validas[0] ?? null,
+      // Para el repaso, la esquina "salió bien" solo si acertó al primer intento.
+      ok: validas.length > 0 && esCorrecta(validas[0]),
+      resuelta: validas.some(esCorrecta),
+    }
+  })
+  const aciertos = intentos.filter((x) => x.resuelta).length
+  return {
+    puntaje: acotar(pct(aciertos, intentos.length) - (errores * penalizacion) / 10),
+    intentos: intentos.map(({ resuelta: _r, ...x }) => x),
+  }
+}
+
 function calificarEscribir(codigo, d, r) {
   const items = itemsEscribir(codigo, d)
   const resp = porIndice(r?.items)
@@ -306,7 +340,6 @@ export function calificar(codigo, contenido, respuestas) {
     case '02-conversacion-completar':
     case '03-conversation-selection':
     case '09-describir':
-    case '07-direcciones':
     case '12-llamada':
     case '13-pedido':
     case '14-anuncios':
@@ -318,6 +351,7 @@ export function calificar(codigo, contenido, respuestas) {
     case '17-emparejar-imagenes':
       salida = calificarEmparejar(d, r, penalizacion); break
     case '11-indicaciones':  salida = calificarOrdenar(d, r); break
+    case '07-direcciones':   salida = calificarDirecciones(d, r, penalizacion); break
     case '10-canciones':     salida = calificarCancion(d, r); break
     case '04-sopa-letras':   salida = calificarSopa(d, r); break
     case '15-laberinto-palabras': salida = calificarLaberinto(d, r); break
